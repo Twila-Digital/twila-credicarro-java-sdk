@@ -67,7 +67,6 @@ class ErrorMappingWireMockTest extends ApiTestSupport {
                     assertThat(api.getMessage()).doesNotContain("falha interna");
                 });
 
-        // 500 é repetido por padrão (RetryOn500 = true): 3 tentativas.
         server.verify(3, getRequestedFor(urlEqualTo(url)));
     }
 

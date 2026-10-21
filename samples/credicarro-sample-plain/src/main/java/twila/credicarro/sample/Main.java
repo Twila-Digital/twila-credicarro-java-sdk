@@ -32,7 +32,6 @@ public final class Main {
                 System.out.printf("%d meses: entrada mínima de %s%n", opcao.getTerm(), opcao.getMinimumDownPayment());
 
         } catch (CredicarroApiException ex) {
-            // O detalhe pode conter dados pessoais: registre só o status e o código estável.
             System.err.printf("%d %s%n", ex.getStatusCode(), ex.getErrorCode());
         }
     }

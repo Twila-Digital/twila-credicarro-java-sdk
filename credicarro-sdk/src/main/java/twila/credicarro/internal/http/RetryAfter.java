@@ -32,7 +32,6 @@ public final class RetryAfter {
             return null;
 
         if (SECONDS.matcher(text).matches()) {
-            // Mais de 9 dígitos já passa de 31 anos: limita sem converter para número.
             if (text.length() > 9)
                 return MAX;
 

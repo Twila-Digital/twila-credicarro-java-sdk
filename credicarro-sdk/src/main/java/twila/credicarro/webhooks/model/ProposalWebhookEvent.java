@@ -17,7 +17,7 @@ public class ProposalWebhookEvent {
     ProposalStatus status;
     int statusRaw;
     String statusName;
-    ProposalEventReason eventReason; // null quando o payload não traz motivo_evento (v1); UNKNOWN só para valor presente e desconhecido
+    ProposalEventReason eventReason;
     String eventReasonRaw;
     String refusalReason;
     OffsetDateTime eventDate;

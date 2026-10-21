@@ -19,7 +19,7 @@ import twila.credicarro.internal.http.RetryAfter;
  * como {@code callTimeout} de cada requisição e um {@link Deadline} é conferido entre as tentativas — não há pool de
  * threads nem tarefa presa após timeout.
  */
-public final class ResilienceExecutor implements AutoCloseable {
+public final class ResilienceExecutor {
 
     private final CredicarroResilienceOptions options;
     private final CircuitBreaker circuitBreaker;
@@ -49,11 +49,6 @@ public final class ResilienceExecutor implements AutoCloseable {
      */
     public ApiResponse executeWithoutBreaker(boolean retrySafe, Deadline deadline, Attempt attempt) {
         return run(retrySafe, deadline, false, attempt);
-    }
-
-    @Override
-    public void close() {
-        // Sem recursos próprios: nada roda fora da thread do chamador.
     }
 
     private ApiResponse run(boolean retrySafe, Deadline deadline, boolean useBreaker, Attempt attempt) {
@@ -106,7 +101,6 @@ public final class ResilienceExecutor implements AutoCloseable {
         Duration retryAfter = RetryAfter.parse(response.headers().get("Retry-After"));
         Duration remaining = deadline.remaining();
 
-        // O servidor pediu mais espera do que o orçamento permite: não dorme, devolve já o erro (429 vira RateLimit).
         if (retryAfter != null && retryAfter.compareTo(remaining) >= 0)
             throw CredicarroExceptionFactory.fromResponse(response);
 
@@ -154,14 +148,12 @@ public final class ResilienceExecutor implements AutoCloseable {
             }
             throw ex;
         } catch (CredicarroException ex) {
-            // Resposta HTTP de negócio (ex.: 401 persistente): o servidor está de pé.
             if (permitted && !recorded) {
                 circuitBreaker.onSuccess(System.nanoTime() - start, TimeUnit.NANOSECONDS);
                 recorded = true;
             }
             throw ex;
         } finally {
-            // Qualquer outra exceção (bug, interrupção) devolve a permissão: a meia-abertura nunca fica presa.
             if (permitted && !recorded)
                 circuitBreaker.releasePermission();
         }

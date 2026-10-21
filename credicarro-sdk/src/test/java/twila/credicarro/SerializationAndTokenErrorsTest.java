@@ -145,13 +145,11 @@ class SerializationAndTokenErrorsTest extends ApiTestSupport {
 
     @Test
     void tokenEndpointErrorsMapPerStatus() {
-        // 400 e 401 -> AuthenticationException
         for (int status : new int[] {400, 401}) {
             server.stubFor(post(urlEqualTo(TOKEN_PATH)).willReturn(jsonResponse(status, "{'tipo':'Integration.Authentication.InvalidCredentials','titulo':'x'}")));
             assertThatThrownBy(() -> client.proposals().get(proposalId)).isInstanceOf(CredicarroAuthenticationException.class);
         }
 
-        // 3xx e demais status -> ApiException com status e tipo
         for (int status : new int[] {302, 403, 404, 409}) {
             server.stubFor(post(urlEqualTo(TOKEN_PATH)).willReturn(jsonResponse(status, "{'tipo':'Token.Teste','titulo':'x'}")));
             assertThatThrownBy(() -> client.proposals().get(proposalId))
@@ -162,7 +160,6 @@ class SerializationAndTokenErrorsTest extends ApiTestSupport {
                     });
         }
 
-        // 5xx persistente (depois do retry) -> ApiException
         server.resetRequests();
         server.stubFor(post(urlEqualTo(TOKEN_PATH)).willReturn(aResponse().withStatus(503)));
         assertThatThrownBy(() -> client.proposals().get(proposalId)).isInstanceOf(CredicarroApiException.class)

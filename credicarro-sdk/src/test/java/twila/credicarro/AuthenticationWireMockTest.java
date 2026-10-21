@@ -50,7 +50,6 @@ class AuthenticationWireMockTest extends ApiTestSupport {
 
     @Test
     void usesExpiraEmToDecideWhenToRenew() {
-        // expira_em já no passado: o token nunca é reaproveitado.
         server.stubFor(post(urlEqualTo(TOKEN_PATH)).willReturn(jsonResponse(200,
                 "{'token_de_acesso':'token-expirado','tipo_de_token':'Bearer','expira_em_segundos':3600,"
                         + "'expira_em':'2020-01-01T00:00:00+00:00','escopo':'x'}")));
@@ -90,7 +89,6 @@ class AuthenticationWireMockTest extends ApiTestSupport {
                     assertThat(auth.getMessage()).contains("401").doesNotContain(CLIENT_SECRET).doesNotContain("token-de-teste");
                 });
 
-        // Só UMA repetição após renovar: 2 chamadas à rota e 2 ao token.
         server.verify(2, getRequestedFor(urlEqualTo(proposalUrl)));
         server.verify(2, postRequestedFor(urlEqualTo(TOKEN_PATH)));
     }
@@ -126,7 +124,6 @@ class AuthenticationWireMockTest extends ApiTestSupport {
 
         assertThatThrownBy(() -> client.proposals().get(proposalId)).isInstanceOf(CredicarroTimeoutException.class);
 
-        // POST do token é seguro de repetir: usa todas as tentativas (padrão 3).
         server.verify(3, postRequestedFor(urlEqualTo(TOKEN_PATH)));
     }
 }

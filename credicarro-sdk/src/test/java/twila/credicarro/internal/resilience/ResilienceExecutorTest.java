@@ -44,7 +44,6 @@ class ResilienceExecutorTest {
 
         Thread.sleep(350);
 
-        // Meia-abertura: a tentativa explode com um erro inesperado e não pode deixar o breaker preso.
         assertThatThrownBy(() -> executor.execute(false, deadline(), d -> {
             throw new IllegalStateException("bug");
         })).isInstanceOf(IllegalStateException.class);

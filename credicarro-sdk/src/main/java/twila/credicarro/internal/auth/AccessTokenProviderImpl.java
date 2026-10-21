@@ -87,7 +87,6 @@ public final class AccessTokenProviderImpl implements AccessTokenProvider {
             return response.expiresAt.toInstant();
 
         long seconds = response.expiresInSeconds != null ? response.expiresInSeconds : 0;
-        // Sem expira_em: agora + max(segundos / 2, segundos - 60).
         return clock.instant().plusSeconds(Math.max(seconds / 2, seconds - FALLBACK_MARGIN_SECONDS));
     }
 }

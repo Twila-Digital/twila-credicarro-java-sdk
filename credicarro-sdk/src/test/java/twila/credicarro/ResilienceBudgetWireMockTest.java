@@ -65,7 +65,6 @@ class ResilienceBudgetWireMockTest extends ApiTestSupport {
 
     @Test
     void attemptTimeoutLongerThanTheHttpLibraryDefaultIsHonoured() {
-        // O OkHttp trazia 10 s de read timeout; com a tentativa em 20 s uma resposta de 11 s precisa chegar.
         server.stubFor(get(urlEqualTo(url)).willReturn(jsonResponse(200, Fixtures.proposalV2()).withFixedDelay(11000)));
 
         try (CredicarroClient patient = newClient(fastResilience().totalTimeout(Duration.ofSeconds(25)).attemptTimeout(Duration.ofSeconds(20)).build())) {

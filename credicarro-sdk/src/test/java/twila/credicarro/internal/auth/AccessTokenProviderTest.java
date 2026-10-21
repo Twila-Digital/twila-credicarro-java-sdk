@@ -125,7 +125,6 @@ class AccessTokenProviderTest {
         String second = provider.getToken(deadline());
         assertThat(second).isNotEqualTo(first);
 
-        // Um token já substituído sendo rejeitado não deve derrubar o token novo.
         provider.invalidate(first);
         assertThat(provider.getToken(deadline())).isEqualTo(second);
         assertThat(calls.get()).isEqualTo(2);

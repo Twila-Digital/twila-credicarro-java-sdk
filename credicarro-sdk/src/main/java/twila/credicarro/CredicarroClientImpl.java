@@ -34,8 +34,6 @@ final class CredicarroClientImpl implements CredicarroClient {
 
     CredicarroClientImpl(String clientId, String clientSecret, URI baseUrl, CredicarroResilienceOptions resilience) {
         this.baseUrl = baseUrl;
-        // connect/read/write em 0 (sem limite próprio): quem manda é o callTimeout de cada requisição, derivado da
-        // tentativa e do orçamento restante. Redirects desligados: um 3xx vira CredicarroApiException.
         this.httpClient = new OkHttpClient.Builder()
                 .retryOnConnectionFailure(false)
                 .followRedirects(false)
@@ -84,7 +82,6 @@ final class CredicarroClientImpl implements CredicarroClient {
 
     @Override
     public void close() {
-        apiRequestExecutor.close();
         httpClient.dispatcher().executorService().shutdown();
         httpClient.connectionPool().evictAll();
     }

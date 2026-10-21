@@ -83,7 +83,6 @@ class CustomersClientWireMockTest extends ApiTestSupport {
         client.customers().upsertAddress("12345678909", CustomerAddress.builder().street("Av. Paulista").neighborhood("Bela Vista")
                 .city("São Paulo").state("SP").postalCode("01311000").build());
 
-        // numero e complemento opcionais são omitidos (e não enviados como null).
         server.verify(postRequestedFor(urlEqualTo(path("v1/customer/address"))).withRequestBody(
                 equalToJson(json("{'cpf':'12345678909','endereco':{'rua':'Av. Paulista','bairro':'Bela Vista','cidade':'São Paulo','estado':'SP','cep':'01311000'}}"),
                         false, false)));

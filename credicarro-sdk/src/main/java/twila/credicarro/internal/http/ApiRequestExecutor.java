@@ -17,7 +17,7 @@ import twila.credicarro.internal.idempotency.IdempotencyClassifier;
 import twila.credicarro.internal.resilience.Deadline;
 import twila.credicarro.internal.resilience.ResilienceExecutor;
 
-public final class ApiRequestExecutor implements AutoCloseable {
+public final class ApiRequestExecutor {
 
     private static final MediaType JSON = MediaType.get("application/json; charset=utf-8");
     private static final byte[] EMPTY = new byte[0];
@@ -91,11 +91,6 @@ public final class ApiRequestExecutor implements AutoCloseable {
             throw CredicarroExceptionFactory.fromResponse(response);
     }
 
-    @Override
-    public void close() {
-        resilience.close();
-    }
-
     private ApiResponse send(
             String method,
             String path,
@@ -107,10 +102,8 @@ public final class ApiRequestExecutor implements AutoCloseable {
         if (explicitKey != null)
             IdempotencyClassifier.validateKey(explicitKey);
 
-        // A chave é decidida uma única vez, fora da rotina de retry: todas as tentativas usam a mesma.
         final String idempotencyKey = resolveKey(method, path, explicitKey, forceKey);
         boolean retrySafe = IdempotencyClassifier.isRetrySafe(method, path, idempotencyKey != null);
-        // O corpo é serializado uma vez só; todas as tentativas (e o replay do 401) reutilizam os mesmos bytes.
         final byte[] body = jsonBody != null ? jsonBody : EMPTY;
 
         return resilience.execute(retrySafe, Deadline.after(budget),
@@ -135,7 +128,6 @@ public final class ApiRequestExecutor implements AutoCloseable {
         if (response.statusCode() != 401)
             return response;
 
-        // 401 numa rota autenticada: renova o token (se ninguém renovou antes) e repete UMA vez.
         tokenProvider.invalidate(token);
         String newToken = tokenProvider.getToken(deadline);
         ApiResponse retried = sendOnce(method, path, body, idempotencyKey, attemptTimeout, deadline, newToken);

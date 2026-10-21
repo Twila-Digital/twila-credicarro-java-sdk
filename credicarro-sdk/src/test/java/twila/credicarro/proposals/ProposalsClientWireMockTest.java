@@ -252,7 +252,6 @@ class ProposalsClientWireMockTest extends ApiTestSupport {
                 .isInstanceOf(CredicarroApiException.class)
                 .satisfies(ex -> assertThat(((CredicarroApiException) ex).getErrorCode()).isEqualTo("Idempotency.KeyConflict"));
 
-        // 409 nunca é repetido.
         server.verify(1, postRequestedFor(urlEqualTo(url)));
     }
 }
