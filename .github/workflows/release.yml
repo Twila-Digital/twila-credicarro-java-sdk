@@ -1,0 +1,55 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+    secrets:
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  contract-tests:
+    needs: ci
+    uses: ./.github/workflows/contract-tests.yml
+
+  publish:
+    needs: [ci, contract-tests]
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+
+      # Sem cache de Maven no job de publicação: nada de cache restaurado no caminho que assina e publica.
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          server-id: central
+          server-username: CENTRAL_TOKEN_USERNAME
+          server-password: CENTRAL_TOKEN_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+
+      - name: Define a versão do release
+        env:
+          TAG: ${{ github.ref_name }}
+        run: mvn -B org.codehaus.mojo:versions-maven-plugin:2.17.1:set -DnewVersion="${TAG#v}" -DprocessAllModules=true -DgenerateBackupPoms=false
+
+      - name: Publica no Maven Central (Sonatype Central Portal)
+        run: mvn -B -pl credicarro-sdk -am deploy -Prelease -DskipTests
+        env:
+          CENTRAL_TOKEN_USERNAME: ${{ secrets.CENTRAL_TOKEN_USERNAME }}
+          CENTRAL_TOKEN_PASSWORD: ${{ secrets.CENTRAL_TOKEN_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          generate_release_notes: true
