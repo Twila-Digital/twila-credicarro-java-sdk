@@ -15,6 +15,17 @@ mvn -pl credicarro-sdk test
 
 Rode os testes em JDK 11 e 21 antes de abrir o PR. O código de produção usa só a API do Java 8 (`--release 8`).
 
+O runtime do JDK 8 é verificado pelo smoke test sem framework (`scripts/LegacySmoke.java`), o mesmo do job `test (8, ubuntu-latest)`. Empacote com o JDK 11+ e rode com o JDK 8 (`JAVA8` = pasta do JDK 8):
+
+```bash
+mvn -pl credicarro-sdk -am package -DskipTests
+mvn -q -pl credicarro-sdk dependency:copy-dependencies -DincludeScope=runtime -DoutputDirectory=target/legacy-deps
+CP="credicarro-sdk/target/classes:credicarro-sdk/target/legacy-deps/*"   # no Windows, separe com ";"
+mkdir -p target/legacy-smoke
+"$JAVA8/bin/javac" -cp "$CP" -d target/legacy-smoke scripts/LegacySmoke.java
+"$JAVA8/bin/java" -cp "target/legacy-smoke:$CP" LegacySmoke
+```
+
 Os contract tests (`contract-tests/`) baixam o `openapi.yaml` público da documentação (`https://documentacao.credicarro.com.br/openapi.yaml`, ou a URL em `CREDICARRO_CONTRACT_TESTS_OPENAPI_URL`) e precisam de rede:
 
 ```bash

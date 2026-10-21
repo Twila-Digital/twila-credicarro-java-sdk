@@ -21,7 +21,7 @@ SDK oficial em Java para a API do Credicarro — financiamento e refinanciamento
 
 | Runtime | Versões aceitas |
 | --- | --- |
-| JDK | 8 ou superior (compilado com `--release 8`; testes unitários rodam em CI nos JDK 11 e 21, pois o WireMock 3 usado nos testes exige JDK 11+) |
+| JDK | 8 ou superior (compilado com `--release 8`; testes unitários rodam em CI nos JDK 11 e 21, pois o WireMock 3 usado nos testes exige JDK 11+, e o `scripts/LegacySmoke.java` roda no JDK 8) |
 
 HTTP via [OkHttp](https://square.github.io/okhttp/) — `java.net.http.HttpClient` do próprio JDK exigiria Java 11+, incompatível com o piso de Java 8 do SDK.
 
@@ -319,7 +319,7 @@ if (evento.isDetailed()) {
 ## Qualidade, segurança e cobertura
 
 - **Build** (`ci.yml`) — compila com `--release 8` em `ubuntu-latest` e `windows-latest`.
-- **Test** (`ci.yml`) — testes unitários rodando sob JDK 11 e JDK 21 (o WireMock 3 dos testes exige JDK 11+; o SDK em si é compilado com `--release 8`).
+- **Test** (`ci.yml`) — testes unitários rodando sob JDK 11 e JDK 21 (o WireMock 3 dos testes exige JDK 11+; o SDK em si é compilado com `--release 8`). No JDK 8, o job `test (8, ubuntu-latest)` roda o `scripts/LegacySmoke.java` contra um servidor HTTP do próprio JDK: token, listagem, consulta e erro `422`.
 - **Contract tests** (`contract-tests.yml`) — comparam os tipos do SDK com o `openapi.yaml` público da documentação (`https://documentacao.credicarro.com.br/openapi.yaml`; sobrescreva com `CREDICARRO_CONTRACT_TESTS_OPENAPI_URL`). O swagger de staging exige autenticação, por isso não é usado.
 - **Quality** (`quality.yml`) — análise estática via Codacy CLI, resultados publicados na aba **Security → Code scanning** do repositório.
 - **Security** (`security.yml`) — [CodeQL](https://codeql.github.com/) para Java, rodando a cada PR/push e semanalmente.

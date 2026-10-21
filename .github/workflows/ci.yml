@@ -38,8 +38,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # O WireMock 3 (sem CVE conhecida no Jetty) exige JDK 11+ para rodar os testes.
-        java: ['11', '21']
+        # O WireMock 3 (sem CVE conhecida no Jetty) exige JDK 11+ para rodar os testes unitários. No JDK 8, o
+        # SDK é empacotado com o JDK 21 (--release 8) e roda o scripts/LegacySmoke.java no runtime do JDK 8.
+        java: ['8', '11', '21']
         os: [ubuntu-latest]
         include:
           - java: '21'
@@ -49,17 +50,38 @@ jobs:
       - uses: actions/checkout@v7
 
       - uses: actions/setup-java@v5
+        if: matrix.java != '8'
         with:
           distribution: temurin
           java-version: ${{ matrix.java }}
           cache: maven
 
+      - uses: actions/setup-java@v5
+        if: matrix.java == '8'
+        with:
+          distribution: temurin
+          java-version: |
+            8
+            21
+          cache: maven
+
       - name: Unit tests
+        if: matrix.java != '8'
         run: mvn -B -pl credicarro-sdk -am test
+
+      - name: Smoke test no JDK 8
+        if: matrix.java == '8'
+        run: |
+          mvn -B -pl credicarro-sdk -am package -DskipTests
+          mvn -B -q -pl credicarro-sdk dependency:copy-dependencies -DincludeScope=runtime -DoutputDirectory=target/legacy-deps
+          CP="credicarro-sdk/target/classes:credicarro-sdk/target/legacy-deps/*"
+          mkdir -p target/legacy-smoke
+          "$JAVA_HOME_8_X64/bin/javac" -cp "$CP" -d target/legacy-smoke scripts/LegacySmoke.java
+          "$JAVA_HOME_8_X64/bin/java" -cp "target/legacy-smoke:$CP" LegacySmoke
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.java == '21'
-        uses: codecov/codecov-action@v7
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           directory: credicarro-sdk/target/site/jacoco
