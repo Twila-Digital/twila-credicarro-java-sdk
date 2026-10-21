@@ -1,6 +1,7 @@
 package twila.credicarro;
 
 import java.net.URI;
+import java.time.Duration;
 import java.util.Locale;
 import twila.credicarro.config.CredicarroEnvironment;
 import twila.credicarro.config.CredicarroResilienceOptions;
@@ -104,58 +105,52 @@ public interface CredicarroClient extends AutoCloseable {
         }
 
         private void validate() {
-            if (isBlank(clientId))
-                throw new CredicarroConfigurationException("clientId é obrigatório.");
+            require(!isBlank(clientId), "clientId é obrigatório.");
+            require(!isBlank(clientSecret), "clientSecret é obrigatório.");
+            require(environment != null || baseUrl != null, "environment é obrigatório quando baseUrl não é informada.");
+            require(resilience != null, "resilience não pode ser nulo.");
 
-            if (isBlank(clientSecret))
-                throw new CredicarroConfigurationException("clientSecret é obrigatório.");
+            if (baseUrl != null)
+                validateBaseUrl(baseUrl);
 
-            if (environment == null && baseUrl == null)
-                throw new CredicarroConfigurationException("environment é obrigatório quando baseUrl não é informada.");
+            validateResilience(resilience);
+        }
 
-            if (resilience == null)
-                throw new CredicarroConfigurationException("resilience não pode ser nulo.");
+        private static void validateBaseUrl(URI url) {
+            require(url.isAbsolute() && url.getHost() != null, "baseUrl, quando informada, deve ser uma URI absoluta.");
 
-            if (baseUrl != null) {
-                if (!baseUrl.isAbsolute() || baseUrl.getHost() == null)
-                    throw new CredicarroConfigurationException("baseUrl, quando informada, deve ser uma URI absoluta.");
+            String scheme = url.getScheme().toLowerCase(Locale.ROOT);
+            boolean https = "https".equals(scheme);
+            boolean httpLoopback = "http".equals(scheme) && isLoopback(url);
+            require(https || httpLoopback, "baseUrl deve usar https (http só é aceito para localhost e 127.0.0.1).");
+        }
 
-                String scheme = baseUrl.getScheme().toLowerCase(Locale.ROOT);
-                boolean https = "https".equals(scheme);
-                boolean httpLoopback = "http".equals(scheme) && isLoopback(baseUrl);
-                if (!https && !httpLoopback)
-                    throw new CredicarroConfigurationException("baseUrl deve usar https (http só é aceito para localhost e 127.0.0.1).");
-            }
+        private static void validateResilience(CredicarroResilienceOptions options) {
+            require(options.getMaxRetryAttempts() >= 1, "resilience.maxRetryAttempts deve ser maior ou igual a 1.");
+            require(isPositive(options.getTotalTimeout()), "resilience.totalTimeout deve ser maior que zero.");
+            require(isPositive(options.getAttemptTimeout()), "resilience.attemptTimeout deve ser maior que zero.");
+            require(options.getAttemptTimeout().compareTo(options.getTotalTimeout()) <= 0,
+                    "resilience.attemptTimeout não pode ser maior que resilience.totalTimeout.");
+            require(isPositive(options.getDocumentUploadAttemptTimeout()),
+                    "resilience.documentUploadAttemptTimeout deve ser maior que zero.");
+            require(!options.getRetryBaseDelay().isNegative(), "resilience.retryBaseDelay não pode ser negativo.");
+            require(options.getCircuitBreakerFailureRatio() > 0 && options.getCircuitBreakerFailureRatio() <= 1,
+                    "resilience.circuitBreakerFailureRatio deve estar entre 0 (exclusivo) e 1 (inclusivo).");
+            require(options.getCircuitBreakerMinimumThroughput() >= 2,
+                    "resilience.circuitBreakerMinimumThroughput deve ser maior ou igual a 2.");
+            require(options.getCircuitBreakerSlidingWindowSize() >= 1,
+                    "resilience.circuitBreakerSlidingWindowSize (segundos) deve ser maior ou igual a 1.");
+            require(isPositive(options.getCircuitBreakerBreakDuration()),
+                    "resilience.circuitBreakerBreakDuration deve ser maior que zero.");
+        }
 
-            if (resilience.getMaxRetryAttempts() < 1)
-                throw new CredicarroConfigurationException("resilience.maxRetryAttempts deve ser maior ou igual a 1.");
+        private static boolean isPositive(Duration value) {
+            return !value.isZero() && !value.isNegative();
+        }
 
-            if (resilience.getTotalTimeout().isZero() || resilience.getTotalTimeout().isNegative())
-                throw new CredicarroConfigurationException("resilience.totalTimeout deve ser maior que zero.");
-
-            if (resilience.getAttemptTimeout().isZero() || resilience.getAttemptTimeout().isNegative())
-                throw new CredicarroConfigurationException("resilience.attemptTimeout deve ser maior que zero.");
-
-            if (resilience.getAttemptTimeout().compareTo(resilience.getTotalTimeout()) > 0)
-                throw new CredicarroConfigurationException("resilience.attemptTimeout não pode ser maior que resilience.totalTimeout.");
-
-            if (resilience.getDocumentUploadAttemptTimeout().isZero() || resilience.getDocumentUploadAttemptTimeout().isNegative())
-                throw new CredicarroConfigurationException("resilience.documentUploadAttemptTimeout deve ser maior que zero.");
-
-            if (resilience.getRetryBaseDelay().isNegative())
-                throw new CredicarroConfigurationException("resilience.retryBaseDelay não pode ser negativo.");
-
-            if (resilience.getCircuitBreakerFailureRatio() <= 0 || resilience.getCircuitBreakerFailureRatio() > 1)
-                throw new CredicarroConfigurationException("resilience.circuitBreakerFailureRatio deve estar entre 0 (exclusivo) e 1 (inclusivo).");
-
-            if (resilience.getCircuitBreakerMinimumThroughput() < 2)
-                throw new CredicarroConfigurationException("resilience.circuitBreakerMinimumThroughput deve ser maior ou igual a 2.");
-
-            if (resilience.getCircuitBreakerSlidingWindowSize() < 1)
-                throw new CredicarroConfigurationException("resilience.circuitBreakerSlidingWindowSize (segundos) deve ser maior ou igual a 1.");
-
-            if (resilience.getCircuitBreakerBreakDuration().isZero() || resilience.getCircuitBreakerBreakDuration().isNegative())
-                throw new CredicarroConfigurationException("resilience.circuitBreakerBreakDuration deve ser maior que zero.");
+        private static void require(boolean valid, String message) {
+            if (!valid)
+                throw new CredicarroConfigurationException(message);
         }
     }
 }

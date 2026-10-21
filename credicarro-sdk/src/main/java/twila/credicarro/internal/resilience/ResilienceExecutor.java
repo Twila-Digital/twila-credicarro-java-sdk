@@ -21,15 +21,15 @@ import twila.credicarro.internal.http.RetryAfter;
  */
 public final class ResilienceExecutor implements AutoCloseable {
 
+    private final CredicarroResilienceOptions options;
+    private final CircuitBreaker circuitBreaker;
+
     /**
      * Uma tentativa HTTP completa. Recebe o orçamento para calcular o {@code callTimeout}.
      */
     public interface Attempt {
         ApiResponse call(Deadline deadline) throws IOException;
     }
-
-    private final CredicarroResilienceOptions options;
-    private final CircuitBreaker circuitBreaker;
 
     public ResilienceExecutor(CredicarroResilienceOptions options) {
         this.options = options;
@@ -64,36 +64,54 @@ public final class ResilienceExecutor implements AutoCloseable {
                 throw new CredicarroTimeoutException("A requisição excedeu o tempo limite total configurado.");
 
             Outcome outcome = runOnce(deadline, useBreaker, attempt);
+            boolean attemptsLeft = number < maxAttempts;
 
             if (outcome.failure != null) {
-                if (number < maxAttempts) {
-                    Duration delay = backoff(number);
-                    if (delay.compareTo(deadline.remaining()) < 0) {
-                        sleep(delay);
-                        continue;
-                    }
-                }
-
-                throw networkFailure(outcome.failure);
+                awaitNetworkRetry(outcome.failure, attemptsLeft, number, deadline);
+                continue;
             }
 
-            ApiResponse response = outcome.response;
-            if (number >= maxAttempts || !TransientFailureClassifier.isTransientResponse(response, options))
-                return response;
-
-            Duration retryAfter = RetryAfter.parse(response.headers().get("Retry-After"));
-            Duration remaining = deadline.remaining();
-
-            // O servidor pediu mais espera do que o orçamento permite: não dorme, devolve já o erro (429 vira RateLimit).
-            if (retryAfter != null && retryAfter.compareTo(remaining) >= 0)
-                throw CredicarroExceptionFactory.fromResponse(response);
-
-            Duration delay = retryAfter != null ? retryAfter : backoff(number);
-            if (delay.compareTo(remaining) >= 0)
-                return response;
+            Duration delay = attemptsLeft ? delayBeforeRetry(outcome.response, number, deadline) : null;
+            if (delay == null)
+                return outcome.response;
 
             sleep(delay);
         }
+    }
+
+    /**
+     * Espera o backoff antes de repetir uma falha de rede, ou lança a falha (sanitizada) quando não há mais tentativas
+     * ou a espera passaria do orçamento.
+     */
+    private void awaitNetworkRetry(IOException failure, boolean attemptsLeft, int number, Deadline deadline) {
+        if (attemptsLeft) {
+            Duration delay = backoff(number);
+            if (delay.compareTo(deadline.remaining()) < 0) {
+                sleep(delay);
+                return;
+            }
+        }
+
+        throw networkFailure(failure);
+    }
+
+    /**
+     * Espera até a próxima tentativa de uma resposta transitória, ou {@code null} quando a resposta deve ser devolvida
+     * já (não transitória, ou sem orçamento para esperar).
+     */
+    private Duration delayBeforeRetry(ApiResponse response, int number, Deadline deadline) {
+        if (!TransientFailureClassifier.isTransientResponse(response, options))
+            return null;
+
+        Duration retryAfter = RetryAfter.parse(response.headers().get("Retry-After"));
+        Duration remaining = deadline.remaining();
+
+        // O servidor pediu mais espera do que o orçamento permite: não dorme, devolve já o erro (429 vira RateLimit).
+        if (retryAfter != null && retryAfter.compareTo(remaining) >= 0)
+            throw CredicarroExceptionFactory.fromResponse(response);
+
+        Duration delay = retryAfter != null ? retryAfter : backoff(number);
+        return delay.compareTo(remaining) < 0 ? delay : null;
     }
 
     private Outcome runOnce(Deadline deadline, boolean useBreaker, Attempt attempt) {

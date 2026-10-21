@@ -1,3 +1,4 @@
+import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -95,7 +96,7 @@ public final class LegacySmoke {
         }
     }
 
-    private static void respond(com.sun.net.httpserver.HttpExchange exchange, int status, String body) throws IOException {
+    private static void respond(HttpExchange exchange, int status, String body) throws IOException {
         byte[] bytes = body.getBytes(StandardCharsets.UTF_8);
         exchange.getResponseHeaders().set("Content-Type", status == 422 ? "application/problem+json" : "application/json");
         exchange.sendResponseHeaders(status, bytes.length == 0 ? -1 : bytes.length);

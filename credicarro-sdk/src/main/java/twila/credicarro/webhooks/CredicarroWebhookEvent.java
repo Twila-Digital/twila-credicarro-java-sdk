@@ -6,6 +6,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Locale;
 import java.util.regex.Pattern;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -146,38 +147,62 @@ public final class CredicarroWebhookEvent {
         if (rawBody == null)
             return "O corpo do webhook é obrigatório para verificar a assinatura.";
 
-        String timestamp = null;
-        String signature = null;
-        boolean duplicated = false;
+        SignatureHeader header = SignatureHeader.parse(signatureHeader);
+        if (header == null)
+            return "Cabeçalho de assinatura malformado: esperado t={timestamp},v1={assinatura}, sem campos repetidos.";
 
-        if (signatureHeader != null) {
-            for (String part : signatureHeader.split(",")) {
+        byte[] expected = computeSignature(signingSecret, header.timestamp, rawBody).getBytes(StandardCharsets.UTF_8);
+
+        if (!MessageDigest.isEqual(expected, header.signature.getBytes(StandardCharsets.UTF_8)))
+            return "A assinatura do webhook não confere.";
+
+        Duration skew = Duration.between(Instant.ofEpochSecond(Long.parseLong(header.timestamp)), now).abs();
+        if (skew.compareTo(tolerance) > 0)
+            return "O timestamp do webhook está fora da janela de tolerância — possível replay.";
+
+        return null;
+    }
+
+    /**
+     * Cabeçalho {@code X-CrediCarro-Signature} ({@code t={timestamp},v1={assinatura}}).
+     */
+    private static final class SignatureHeader {
+        private final String timestamp;
+        private final String signature;
+
+        private SignatureHeader(String timestamp, String signature) {
+            this.timestamp = timestamp;
+            this.signature = signature;
+        }
+
+        /**
+         * Devolve {@code null} se o cabeçalho faltar, tiver campo vazio ou repetido, ou timestamp não numérico.
+         */
+        static SignatureHeader parse(String value) {
+            if (value == null)
+                return null;
+
+            String timestamp = null;
+            String signature = null;
+
+            for (String part : value.split(",")) {
                 String[] pair = part.trim().split("=", 2);
                 if (pair.length != 2)
                     continue;
 
                 if ("t".equals(pair[0])) {
-                    duplicated |= timestamp != null;
+                    if (timestamp != null)
+                        return null;
                     timestamp = TIMESTAMP.matcher(pair[1]).matches() ? pair[1] : "";
                 } else if ("v1".equals(pair[0])) {
-                    duplicated |= signature != null;
-                    signature = pair[1].toLowerCase(java.util.Locale.ROOT);
+                    if (signature != null)
+                        return null;
+                    signature = pair[1].toLowerCase(Locale.ROOT);
                 }
             }
+
+            boolean complete = timestamp != null && !timestamp.isEmpty() && signature != null && !signature.isEmpty();
+            return complete ? new SignatureHeader(timestamp, signature) : null;
         }
-
-        if (duplicated || timestamp == null || timestamp.isEmpty() || signature == null || signature.isEmpty())
-            return "Cabeçalho de assinatura malformado: esperado t={timestamp},v1={assinatura}, sem campos repetidos.";
-
-        byte[] expected = computeSignature(signingSecret, timestamp, rawBody).getBytes(StandardCharsets.UTF_8);
-
-        if (!MessageDigest.isEqual(expected, signature.getBytes(StandardCharsets.UTF_8)))
-            return "A assinatura do webhook não confere.";
-
-        Duration skew = Duration.between(Instant.ofEpochSecond(Long.parseLong(timestamp)), now).abs();
-        if (skew.compareTo(tolerance) > 0)
-            return "O timestamp do webhook está fora da janela de tolerância — possível replay.";
-
-        return null;
     }
 }
