@@ -23,7 +23,6 @@ import twila.credicarro.webhooks.WebhooksClientImpl;
 final class CredicarroClientImpl implements CredicarroClient {
 
     private final OkHttpClient httpClient;
-    private final ApiRequestExecutor apiRequestExecutor;
     private final URI baseUrl;
 
     private final CustomersClient customers;
@@ -46,7 +45,7 @@ final class CredicarroClientImpl implements CredicarroClient {
         ResilienceExecutor resilienceExecutor = new ResilienceExecutor(resilience);
         TokenApiClientImpl tokenApiClient = new TokenApiClientImpl(httpClient, baseUrl, resilience.getAttemptTimeout(), resilienceExecutor);
         AccessTokenProvider tokenProvider = new AccessTokenProviderImpl(tokenApiClient, clientId, clientSecret);
-        this.apiRequestExecutor = new ApiRequestExecutor(httpClient, baseUrl, tokenProvider, resilienceExecutor, resilience);
+        ApiRequestExecutor apiRequestExecutor = new ApiRequestExecutor(httpClient, baseUrl, tokenProvider, resilienceExecutor, resilience);
 
         this.customers = new CustomersClientImpl(apiRequestExecutor);
         this.simulations = new SimulationsClientImpl(apiRequestExecutor);
