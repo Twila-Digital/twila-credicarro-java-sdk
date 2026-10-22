@@ -28,6 +28,9 @@ public final class CreateFinancingSimulationRequestWire {
     @JsonProperty("isVeiculoZeroKm")
     public boolean isVeiculoZeroKm;
 
+    @JsonProperty("retornoComissao")
+    public Integer retornoComissao;
+
     @JsonProperty("cnpjLoja")
     public String cnpjLoja;
 }

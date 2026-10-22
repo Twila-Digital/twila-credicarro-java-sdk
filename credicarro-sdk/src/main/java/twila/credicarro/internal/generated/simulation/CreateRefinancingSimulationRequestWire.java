@@ -19,6 +19,9 @@ public final class CreateRefinancingSimulationRequestWire {
     @JsonProperty("valorSolicitado")
     public BigDecimal valorSolicitado;
 
+    @JsonProperty("retornoComissao")
+    public Integer retornoComissao;
+
     @JsonProperty("cnpjLoja")
     public String cnpjLoja;
 }

@@ -26,6 +26,7 @@ public final class Routes {
 
     public static final String V2_RANGE_FINANCING = "v2/proposal/simulation/range/financing";
     public static final String V2_RANGE_REFINANCING = "v2/proposal/simulation/range/refinancing";
+    public static final String V2_SIMULATION_COMMISSION_RETURNS = "v2/proposal/simulation/commission-returns";
     public static final String V2_SIMULATION_FINANCING = "v2/proposal/simulation/financing";
     public static final String V2_SIMULATION_REFINANCING = "v2/proposal/simulation/refinancing";
     public static final String V2_PROPOSALS = "v2/proposal";

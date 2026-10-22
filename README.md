@@ -119,6 +119,7 @@ List<SimulationOption> opcoes = client.simulations().createFinancing(CreateFinan
         .state("SP")
         .isZeroKm(false)
         .storeCnpj("11.222.333/0001-81")
+        // .commissionReturn(2) // opcional, dentro da faixa configurada na loja (ver getCommissionReturns)
         .build());
 
 for (SimulationOption opcao : opcoes)
@@ -176,7 +177,7 @@ client.proposals().uploadDocument(propostaId, ProposalDocumentUpload.builder()
 | Cliente | Métodos |
 | --- | --- |
 | `client.customers()` | `upsert`, `create`, `upsertAddress`, `upsertProfessionalData` |
-| `client.simulations()` | `getFinancingRange`, `getRefinancingRange`, `createFinancing`, `createRefinancing`, `get`, `list` |
+| `client.simulations()` | `getFinancingRange`, `getRefinancingRange`, `getCommissionReturns`, `createFinancing`, `createRefinancing`, `get`, `list` |
 | `client.proposals()` | `create`, `get`, `list`, `sendVehicleDetails`, `sendDepositAccount`, `uploadDocument` |
 | `client.webhooks()` | `create`, `list`, `update`, `delete` |
 | `client.v1().simulations()` | `getFinancingRange`, `getRefinancingRange`, `createFinancing`, `createRefinancing` (rotas v1, sem CNPJ da loja) |

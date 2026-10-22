@@ -16,10 +16,15 @@ public class CreateRefinancingSimulationRequest {
     BigDecimal requestedAmount;
     String storeCnpj;
     /**
+     * Retorno de comissão a aplicar, dentro da faixa configurada na loja. Opcional: {@code null} usa a taxa padrão,
+     * quando a loja permitir. Consulte a faixa aceita com {@link twila.credicarro.simulations.SimulationsClient#getCommissionReturns}.
+     */
+    Integer commissionReturn;
+    /**
      * Dados pessoais, bancários e credenciais aparecem mascarados.
      */
     @Override
     public String toString() {
-        return Masking.describe("CreateRefinancingSimulationRequest", "cpf", Masking.cpf(cpf), "licensePlate", Masking.mask(licensePlate), "requestedAmount", requestedAmount, "storeCnpj", storeCnpj);
+        return Masking.describe("CreateRefinancingSimulationRequest", "cpf", Masking.cpf(cpf), "licensePlate", Masking.mask(licensePlate), "requestedAmount", requestedAmount, "storeCnpj", storeCnpj, "commissionReturn", commissionReturn);
     }
 }

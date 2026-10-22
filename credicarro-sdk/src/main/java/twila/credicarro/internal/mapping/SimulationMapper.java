@@ -3,12 +3,14 @@ package twila.credicarro.internal.mapping;
 import java.util.ArrayList;
 import java.util.List;
 import twila.credicarro.internal.generated.simulation.CetWire;
+import twila.credicarro.internal.generated.simulation.CommissionReturnWire;
 import twila.credicarro.internal.generated.simulation.CreateFinancingSimulationRequestWire;
 import twila.credicarro.internal.generated.simulation.CreateRefinancingSimulationRequestWire;
 import twila.credicarro.internal.generated.simulation.FinancingRangeOptionWire;
 import twila.credicarro.internal.generated.simulation.FinancingRangeResponseWire;
 import twila.credicarro.internal.generated.simulation.InterestWire;
 import twila.credicarro.internal.generated.simulation.IofWire;
+import twila.credicarro.internal.generated.simulation.ListCommissionReturnsResponseWire;
 import twila.credicarro.internal.generated.simulation.RefinancingRangeOptionWire;
 import twila.credicarro.internal.generated.simulation.RefinancingRangeResponseWire;
 import twila.credicarro.internal.generated.simulation.SimulationListResponseWire;
@@ -19,6 +21,9 @@ import twila.credicarro.internal.generated.simulation.V1CreateFinancingSimulatio
 import twila.credicarro.internal.generated.simulation.V1CreateRefinancingSimulationRequestWire;
 import twila.credicarro.internal.generated.simulation.VehicleWire;
 import twila.credicarro.serialization.EnumMapping;
+import twila.credicarro.simulations.model.CommissionReturn;
+import twila.credicarro.simulations.model.CommissionReturnTarget;
+import twila.credicarro.simulations.model.CommissionReturnType;
 import twila.credicarro.simulations.model.CreateFinancingSimulationRequest;
 import twila.credicarro.simulations.model.CreateRefinancingSimulationRequest;
 import twila.credicarro.simulations.model.FinancingRangeOption;
@@ -46,6 +51,7 @@ public final class SimulationMapper {
         wire.valorEntrada = request.getDownPayment();
         wire.uf = request.getState();
         wire.isVeiculoZeroKm = request.isZeroKm();
+        wire.retornoComissao = request.getCommissionReturn();
         wire.cnpjLoja = request.getStoreCnpj();
         return wire;
     }
@@ -55,6 +61,7 @@ public final class SimulationMapper {
         wire.cpf = request.getCpf();
         wire.placa = request.getLicensePlate();
         wire.valorSolicitado = request.getRequestedAmount();
+        wire.retornoComissao = request.getCommissionReturn();
         wire.cnpjLoja = request.getStoreCnpj();
         return wire;
     }
@@ -98,6 +105,26 @@ public final class SimulationMapper {
         }
 
         return options;
+    }
+
+    public static List<CommissionReturn> toPublic(ListCommissionReturnsResponseWire wire) {
+        List<CommissionReturn> returns = new ArrayList<>();
+
+        if (wire != null && wire.retornosComissao != null) {
+            for (CommissionReturnWire item : wire.retornosComissao)
+                returns.add(toPublic(item));
+        }
+
+        return returns;
+    }
+
+    public static CommissionReturn toPublic(CommissionReturnWire wire) {
+        return new CommissionReturn(
+                CommissionReturnType.fromWireName(wire.tipo),
+                CommissionReturnTarget.fromWireName(wire.alvo),
+                wire.retornoMinimo,
+                wire.retornoMaximo,
+                wire.permiteTaxaPadrao);
     }
 
     public static List<SimulationOption> toPublic(SimulationListResponseWire wire) {
