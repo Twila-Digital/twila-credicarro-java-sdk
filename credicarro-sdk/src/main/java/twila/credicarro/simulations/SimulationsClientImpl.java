@@ -6,6 +6,7 @@ import java.util.UUID;
 import twila.credicarro.ListRequest;
 import twila.credicarro.PagedResult;
 import twila.credicarro.internal.generated.simulation.FinancingRangeResponseWire;
+import twila.credicarro.internal.generated.simulation.ListCommissionReturnsResponseWire;
 import twila.credicarro.internal.generated.simulation.RefinancingRangeResponseWire;
 import twila.credicarro.internal.generated.simulation.SimulationListResponseWire;
 import twila.credicarro.internal.generated.simulation.SimulationWire;
@@ -15,6 +16,7 @@ import twila.credicarro.internal.http.JsonSupport;
 import twila.credicarro.internal.http.QueryStringBuilder;
 import twila.credicarro.internal.http.Routes;
 import twila.credicarro.internal.mapping.SimulationMapper;
+import twila.credicarro.simulations.model.CommissionReturn;
 import twila.credicarro.simulations.model.CreateFinancingSimulationRequest;
 import twila.credicarro.simulations.model.CreateRefinancingSimulationRequest;
 import twila.credicarro.simulations.model.FinancingRangeOption;
@@ -44,6 +46,15 @@ public final class SimulationsClientImpl implements SimulationsClient {
         ApiRequestExecutor.ensureSuccess(response);
 
         return SimulationMapper.toPublic(JsonSupport.read(response, RefinancingRangeResponseWire.class));
+    }
+
+    @Override
+    public List<CommissionReturn> getCommissionReturns(String storeCnpj) {
+        String path = new QueryStringBuilder().add("cnpjLoja", storeCnpj).build(Routes.V2_SIMULATION_COMMISSION_RETURNS);
+        ApiResponse response = executor.get(path);
+        ApiRequestExecutor.ensureSuccess(response);
+
+        return SimulationMapper.toPublic(JsonSupport.read(response, ListCommissionReturnsResponseWire.class));
     }
 
     @Override
