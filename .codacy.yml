@@ -1,0 +1,6 @@
+exclude_paths:
+  - "**/src/test/**"
+  - "contract-tests/**"
+  - "samples/**"
+  - "scripts/**"
+  - "**/target/**"

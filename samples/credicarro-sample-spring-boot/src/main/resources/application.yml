@@ -1,0 +1,7 @@
+credicarro:
+  client-id: ${CREDICARRO_CLIENT_ID:}
+  client-secret: ${CREDICARRO_CLIENT_SECRET:}
+  environment: ${CREDICARRO_ENVIRONMENT:STAGING}
+
+server:
+  port: 8080

@@ -1,0 +1,25 @@
+name: Contract tests
+
+on:
+  schedule:
+    - cron: '23 6 * * *'
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  contract-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Contract tests contra o openapi.yaml público da documentação
+        run: mvn -B -pl contract-tests -am test
