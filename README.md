@@ -127,6 +127,20 @@ for (SimulationOption opcao : opcoes)
 
 Para refinanciamento use `getRefinancingRange` e `createRefinancing(CreateRefinancingSimulationRequest)`.
 
+**Retorno de comissão (opcional).** Consulte as faixas da loja e envie `commissionReturn` dentro da faixa da modalidade, com `target` `CommissionReturnTarget.STORE`:
+
+```java
+List<CommissionReturn> faixas = client.simulations().getCommissionReturns("11.222.333/0001-81"); // vazio se não houver
+Integer retorno = faixas.stream()
+        .filter(f -> f.getType() == SimulationType.FINANCING && f.getTarget() == CommissionReturnTarget.STORE)
+        .map(CommissionReturn::getMaximumReturn)
+        .findFirst().orElse(null);
+
+// CreateFinancingSimulationRequest.builder()...commissionReturn(retorno).build()
+```
+
+Fora da faixa, a API retorna `422 Store.CommissionReturn.OutOfRange`; sem faixa configurada, `422 Store.CommissionReturn.NotConfigured`. `null` não é enviado, e as rotas v1 não aceitam o campo.
+
 ### 3. Criar a proposta e acompanhar
 
 ```java
@@ -176,9 +190,9 @@ client.proposals().uploadDocument(propostaId, ProposalDocumentUpload.builder()
 | Cliente | Métodos |
 | --- | --- |
 | `client.customers()` | `upsert`, `create`, `upsertAddress`, `upsertProfessionalData` |
-| `client.simulations()` | `getFinancingRange`, `getRefinancingRange`, `createFinancing`, `createRefinancing`, `get`, `list` |
+| `client.simulations()` | `getFinancingRange`, `getRefinancingRange`, `getCommissionReturns`, `createFinancing`, `createRefinancing`, `get`, `list` |
 | `client.proposals()` | `create`, `get`, `list`, `sendVehicleDetails`, `sendDepositAccount`, `uploadDocument` |
-| `client.webhooks()` | `create`, `list`, `update`, `delete` |
+| `client.webhooks()` | `create`, `list`, `update`, `delete`, `listDeliveries`, `getDeliveryChart`, `resend` |
 | `client.v1().simulations()` | `getFinancingRange`, `getRefinancingRange`, `createFinancing`, `createRefinancing` (rotas v1, sem CNPJ da loja) |
 | `client.v1().proposals()` | `create`, `get` (rotas v1) |
 
@@ -197,6 +211,7 @@ O SDK só repete uma requisição quando isso é seguro:
 | `proposals.sendVehicleDetails`, `sendDepositAccount` | — (substituição) | Sim |
 | `webhooks.update`, `webhooks.delete` | — | Sim |
 | `webhooks.create` | — (a rota não aceita) | **Não** |
+| `webhooks.resend` | — (a rota não aceita) | **Não** (repetir dispararia o webhook de novo); espera até 30 s pela sua URL |
 
 São repetidos: `408`, `429` (respeitando `Retry-After`), `500` (padrão; desligue com `retryOn500(false)`), `502`, `503`, `504`, falha de rede e timeout de tentativa — até `maxRetryAttempts` (padrão 3), com backoff exponencial e jitter. Os demais `4xx` nunca são repetidos.
 
@@ -224,7 +239,7 @@ Os valores acima são os padrões. Há ainda um circuit breaker (abre com 50% de
 
 ## Paginação
 
-`simulations().list(...)`, `proposals().list(...)` e `webhooks().list(...)` retornam `PagedResult<T>` — sem auto-paginação; você controla o avanço de página. `ListRequest` valida `page >= 1` e `pageSize` de 1 a 100 (padrão: página 1, 10 itens).
+`simulations().list(...)`, `proposals().list(...)`, `webhooks().list(...)` e `webhooks().listDeliveries(...)` retornam `PagedResult<T>` — sem auto-paginação; você controla o avanço de página. `ListRequest` valida `page >= 1` e `pageSize` de 1 a 100 (padrão: página 1, 10 itens).
 
 ```java
 PagedResult<ProposalSummary> pagina = client.proposals().list(ListRequest.of(1, 20));
@@ -288,6 +303,27 @@ CreateWebhookResult webhook = client.webhooks().create(CreateWebhookRequest.buil
 
 String segredo = webhook.getSigningSecret();
 ```
+
+Histórico, gráfico e reenvio:
+
+```java
+WebhookDeliveryFilter semana = WebhookDeliveryFilter.builder()
+        .initialDate(OffsetDateTime.parse("2026-11-01T00:00:00-03:00"))
+        .finalDate(OffsetDateTime.parse("2026-11-07T23:59:59-03:00"))
+        .build();
+
+// Envios que falharam (filtros opcionais)
+PagedResult<WebhookDelivery> falhas = client.webhooks().listDeliveries(
+        semana.toBuilder().statusCode(500).build(), ListRequest.defaults());
+
+// Sucessos e erros por intervalo (período obrigatório, até 31 dias; rótulos no horário de Brasília)
+List<WebhookDeliveryChartPoint> grafico = client.webhooks().getDeliveryChart(semana);
+
+// Reenvia o mesmo corpo para a sua URL depois de corrigir a falha
+WebhookResendResult resultado = client.webhooks().resend(falhas.getItems().get(0).getId());
+```
+
+O reenvio chega com uma `Idempotency-Key` nova (`{id_mensagem}:{id_webhook}:{id_tentativa}`); para tratá-lo como a mesma notificação, deduplique pelo prefixo `{id_mensagem}:{id_webhook}`. `getStatusCode()` vem `null` quando a sua URL não respondeu.
 
 Ao receber a notificação, valide a assinatura contra o **corpo bruto** (antes de desserializar):
 

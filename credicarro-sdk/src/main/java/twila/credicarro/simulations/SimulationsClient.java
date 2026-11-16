@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import twila.credicarro.ListRequest;
 import twila.credicarro.PagedResult;
+import twila.credicarro.simulations.model.CommissionReturn;
 import twila.credicarro.simulations.model.CreateFinancingSimulationRequest;
 import twila.credicarro.simulations.model.CreateRefinancingSimulationRequest;
 import twila.credicarro.simulations.model.FinancingRangeOption;
@@ -26,6 +27,12 @@ public interface SimulationsClient {
      * Faixa de valor refinanciável por prazo ({@code GET v2/proposal/simulation/range/refinancing}).
      */
     List<RefinancingRangeOption> getRefinancingRange(String licensePlate, String storeCnpj);
+
+    /**
+     * Faixas de retorno de comissão da loja ({@code GET v2/proposal/simulation/commission-returns}). Lista vazia quando
+     * a loja não tem retorno configurado. A simulação valida pela faixa com {@code CommissionReturnTarget.STORE}.
+     */
+    List<CommissionReturn> getCommissionReturns(String storeCnpj);
 
     /**
      * Cria a simulação de financiamento ({@code POST v2/proposal/simulation/financing}); uma opção por prazo.

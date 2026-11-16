@@ -16,10 +16,15 @@ public class CreateRefinancingSimulationRequest {
     BigDecimal requestedAmount;
     String storeCnpj;
     /**
+     * Retorno de comissão ({@code retornoComissao}), opcional. Quando informado, precisa estar na faixa
+     * {@code Refinancing} da loja (veja {@code SimulationsClient.getCommissionReturns}); {@code null} não é enviado.
+     */
+    Integer commissionReturn;
+    /**
      * Dados pessoais, bancários e credenciais aparecem mascarados.
      */
     @Override
     public String toString() {
-        return Masking.describe("CreateRefinancingSimulationRequest", "cpf", Masking.cpf(cpf), "licensePlate", Masking.mask(licensePlate), "requestedAmount", requestedAmount, "storeCnpj", storeCnpj);
+        return Masking.describe("CreateRefinancingSimulationRequest", "cpf", Masking.cpf(cpf), "licensePlate", Masking.mask(licensePlate), "requestedAmount", requestedAmount, "storeCnpj", storeCnpj, "commissionReturn", commissionReturn);
     }
 }
