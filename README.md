@@ -130,16 +130,18 @@ Para refinanciamento use `getRefinancingRange` e `createRefinancing(CreateRefina
 **Retorno de comissão (opcional).** Consulte as faixas da loja e envie `commissionReturn` dentro da faixa da modalidade, com `target` `CommissionReturnTarget.STORE`:
 
 ```java
-List<CommissionReturn> faixas = client.simulations().getCommissionReturns("11.222.333/0001-81"); // vazio se não houver
+List<CommissionReturn> faixas = client.simulations().getCommissionReturns("11.222.333/0001-81");
 Integer retorno = faixas.stream()
         .filter(f -> f.getType() == SimulationType.FINANCING && f.getTarget() == CommissionReturnTarget.STORE)
         .map(CommissionReturn::getMaximumReturn)
         .findFirst().orElse(null);
 
-// CreateFinancingSimulationRequest.builder()...commissionReturn(retorno).build()
+List<SimulationOption> opcoes = client.simulations().createFinancing(CreateFinancingSimulationRequest.builder()
+        .cpf("12345678909").licensePlate("ABC1D23").vehicleAmount(new BigDecimal("45000")).downPayment(new BigDecimal("5000"))
+        .state("SP").isZeroKm(false).storeCnpj("11.222.333/0001-81").commissionReturn(retorno).build());
 ```
 
-Fora da faixa, a API retorna `422 Store.CommissionReturn.OutOfRange`; sem faixa configurada, `422 Store.CommissionReturn.NotConfigured`. `null` não é enviado, e as rotas v1 não aceitam o campo.
+Lista vazia significa loja sem retorno configurado. Fora da faixa, a API retorna `422 Store.CommissionReturn.OutOfRange`; sem faixa configurada, `422 Store.CommissionReturn.NotConfigured`. `null` não é enviado, e as rotas v1 não aceitam o campo.
 
 ### 3. Criar a proposta e acompanhar
 
@@ -312,15 +314,13 @@ WebhookDeliveryFilter semana = WebhookDeliveryFilter.builder()
         .finalDate(OffsetDateTime.parse("2026-11-07T23:59:59-03:00"))
         .build();
 
-// Envios que falharam (filtros opcionais)
 PagedResult<WebhookDelivery> falhas = client.webhooks().listDeliveries(
         semana.toBuilder().statusCode(500).build(), ListRequest.defaults());
 
-// Reenvia o mesmo corpo para a sua URL depois de corrigir a falha
 WebhookResendResult resultado = client.webhooks().resend(falhas.getItems().get(0).getId());
 ```
 
-O reenvio chega com uma `Idempotency-Key` nova (`{id_mensagem}:{id_webhook}:{id_tentativa}`); para tratá-lo como a mesma notificação, deduplique pelo prefixo `{id_mensagem}:{id_webhook}`. `getStatusCode()` vem `null` quando a sua URL não respondeu.
+Os filtros do histórico são opcionais. O reenvio manda o mesmo corpo e chega com uma `Idempotency-Key` nova (`{id_mensagem}:{id_webhook}:{id_tentativa}`); para tratá-lo como a mesma notificação, deduplique pelo prefixo `{id_mensagem}:{id_webhook}`. `getStatusCode()` vem `null` quando a sua URL não respondeu.
 
 Ao receber a notificação, valide a assinatura contra o **corpo bruto** (antes de desserializar):
 
