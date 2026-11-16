@@ -13,6 +13,8 @@ import java.util.regex.Pattern;
  *       retorna {@code 409 Cpf.CpfAlreadyAdded}); sem a chave ela faz upsert.</li>
  *   <li>Seguras de repetir: {@code GET}; token; {@code POST} com chave; dados do veículo e conta de recebimento
  *       (semântica de substituição); {@code PUT}/{@code DELETE} de webhook.</li>
+ *   <li>{@code POST v1/proposal/simulation/financing/without-cpf} e {@code .../refinancing/without-cpf} não gravam nada:
+ *       nunca recebem {@code Idempotency-Key} e são seguras de repetir, como uma leitura.</li>
  *   <li>Não seguras: {@code POST v1/webhook} e {@code POST v1/customer/unified} sem chave.</li>
  * </ul>
  */
@@ -23,6 +25,8 @@ public final class IdempotencyClassifier {
                     + "|v[12]/proposal/simulation/(financing|refinancing)"
                     + "|v[12]/proposal"
                     + "|v2/proposal/[^/]+/document)$");
+
+    private static final Pattern READ_ONLY_POST_ROUTES = Pattern.compile("^v1/proposal/simulation/(financing|refinancing)/without-cpf$");
 
     private static final Pattern UNIFIED_ROUTE = Pattern.compile("^v1/customer/unified$");
 
@@ -62,7 +66,8 @@ public final class IdempotencyClassifier {
         if (!"POST".equalsIgnoreCase(method))
             return false;
 
-        if (ACCESS_TOKEN_ROUTE.matcher(route).matches() || REPLACEMENT_ROUTES.matcher(route).matches())
+        if (ACCESS_TOKEN_ROUTE.matcher(route).matches() || REPLACEMENT_ROUTES.matcher(route).matches()
+                || READ_ONLY_POST_ROUTES.matcher(route).matches())
             return true;
 
         return hasIdempotencyKey && acceptsIdempotencyKey(method, path);

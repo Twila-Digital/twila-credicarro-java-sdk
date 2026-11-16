@@ -19,6 +19,8 @@ public final class Routes {
     public static final String V1_RANGE_REFINANCING = "v1/proposal/simulation/range/refinancing";
     public static final String V1_SIMULATION_FINANCING = "v1/proposal/simulation/financing";
     public static final String V1_SIMULATION_REFINANCING = "v1/proposal/simulation/refinancing";
+    public static final String V1_SIMULATION_FINANCING_WITHOUT_CPF = "v1/proposal/simulation/financing/without-cpf";
+    public static final String V1_SIMULATION_REFINANCING_WITHOUT_CPF = "v1/proposal/simulation/refinancing/without-cpf";
     public static final String V1_SIMULATIONS = "v1/proposal/simulation";
     public static final String V1_SIMULATION_BY_ID = "v1/proposal/simulation/%s";
     public static final String V1_PROPOSALS = "v1/proposal";

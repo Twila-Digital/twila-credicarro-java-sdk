@@ -127,6 +127,38 @@ for (SimulationOption opcao : opcoes)
 
 Para refinanciamento use `getRefinancingRange` e `createRefinancing(CreateRefinancingSimulationRequest)`.
 
+Para calcular as parcelas só com placa, valor do veículo e UF, sem CPF e sem cadastro de cliente, use `client.v1().simulations().createFinancingWithoutCpf`. Nada é gravado: as opções não têm `simulationId` e não servem para criar proposta. `downPayment` é opcional (omitido, a API usa a entrada mínima da taxa da loja). A chamada não envia `Idempotency-Key` e é repetida automaticamente em falhas transitórias.
+
+```java
+import twila.credicarro.simulations.model.FinancingWithoutCpfOption;
+import twila.credicarro.v1.CreateFinancingWithoutCpfRequest;
+
+List<FinancingWithoutCpfOption> opcoes = client.v1().simulations().createFinancingWithoutCpf(CreateFinancingWithoutCpfRequest.builder()
+        .licensePlate("ABC1D23")
+        .vehicleAmount(new BigDecimal("45000"))
+        .state("SP")
+        .build());
+
+for (FinancingWithoutCpfOption opcao : opcoes)
+    System.out.printf("%dx de %s (entrada mínima %s)%n", opcao.getTerm(), opcao.getInstallmentAmount(), opcao.getMinimumDownPayment());
+```
+
+O refinanciamento sem CPF é análogo (`createRefinancingWithoutCpf`), com `licensePlate`, `requestedAmount` e `state` obrigatórios. Só voltam os prazos em cuja faixa o valor cabe, e cada opção traz a faixa refinanciável (`minimumAmount` e `maximumAmount`). Também não grava nada, não envia `Idempotency-Key` e é repetida automaticamente em falhas transitórias.
+
+```java
+import twila.credicarro.simulations.model.RefinancingWithoutCpfOption;
+import twila.credicarro.v1.CreateRefinancingWithoutCpfRequest;
+
+List<RefinancingWithoutCpfOption> opcoes = client.v1().simulations().createRefinancingWithoutCpf(CreateRefinancingWithoutCpfRequest.builder()
+        .licensePlate("ABC1D23")
+        .requestedAmount(new BigDecimal("20000"))
+        .state("SP")
+        .build());
+
+for (RefinancingWithoutCpfOption opcao : opcoes)
+    System.out.printf("%dx de %s (faixa %s a %s)%n", opcao.getTerm(), opcao.getInstallmentAmount(), opcao.getMinimumAmount(), opcao.getMaximumAmount());
+```
+
 ### 3. Criar a proposta e acompanhar
 
 ```java
@@ -179,7 +211,7 @@ client.proposals().uploadDocument(propostaId, ProposalDocumentUpload.builder()
 | `client.simulations()` | `getFinancingRange`, `getRefinancingRange`, `createFinancing`, `createRefinancing`, `get`, `list` |
 | `client.proposals()` | `create`, `get`, `list`, `sendVehicleDetails`, `sendDepositAccount`, `uploadDocument` |
 | `client.webhooks()` | `create`, `list`, `update`, `delete` |
-| `client.v1().simulations()` | `getFinancingRange`, `getRefinancingRange`, `createFinancing`, `createRefinancing` (rotas v1, sem CNPJ da loja) |
+| `client.v1().simulations()` | `getFinancingRange`, `getRefinancingRange`, `createFinancing`, `createFinancingWithoutCpf`, `createRefinancing`, `createRefinancingWithoutCpf` (rotas v1, sem CNPJ da loja) |
 | `client.v1().proposals()` | `create`, `get` (rotas v1) |
 
 ## Idempotência e repetição automática (retry)
@@ -189,6 +221,7 @@ O SDK só repete uma requisição quando isso é seguro:
 | Requisição | `Idempotency-Key` | Repetida automaticamente? |
 | --- | --- | --- |
 | `GET` e token | — | Sim |
+| `v1().simulations().createFinancingWithoutCpf`, `createRefinancingWithoutCpf` | — (a rota não aceita; não grava nada) | Sim |
 | `customers.create`, `upsertAddress`, `upsertProfessionalData` | Gerada pelo SDK (uma por chamada, a mesma em todas as tentativas) | Sim |
 | `simulations.createFinancing/createRefinancing`, `proposals.create` (v1 e v2) | Gerada pelo SDK | Sim |
 | `proposals.uploadDocument` | A informada, ou gerada pelo SDK (sempre enviada) | Sim |

@@ -40,9 +40,13 @@ import twila.credicarro.internal.generated.proposal.ProposalV2Wire;
 import twila.credicarro.internal.generated.proposal.ProposalWire;
 import twila.credicarro.internal.generated.proposal.VehicleDetailRequestWire;
 import twila.credicarro.internal.generated.simulation.CreateFinancingSimulationRequestWire;
+import twila.credicarro.internal.generated.simulation.CreateFinancingWithoutCpfRequestWire;
 import twila.credicarro.internal.generated.simulation.CreateRefinancingSimulationRequestWire;
+import twila.credicarro.internal.generated.simulation.CreateRefinancingWithoutCpfRequestWire;
 import twila.credicarro.internal.generated.simulation.FinancingRangeResponseWire;
+import twila.credicarro.internal.generated.simulation.FinancingWithoutCpfResponseWire;
 import twila.credicarro.internal.generated.simulation.RefinancingRangeResponseWire;
+import twila.credicarro.internal.generated.simulation.RefinancingWithoutCpfResponseWire;
 import twila.credicarro.internal.generated.simulation.SimulationListResponseWire;
 import twila.credicarro.internal.generated.simulation.SimulationWire;
 import twila.credicarro.internal.generated.simulation.V1CreateFinancingSimulationRequestWire;
@@ -114,6 +118,8 @@ class WireContractTests {
                 new Operation("GET", Routes.V1_RANGE_FINANCING, null, FinancingRangeResponseWire.class, "200", null, "placa"),
                 new Operation("GET", Routes.V1_RANGE_REFINANCING, null, RefinancingRangeResponseWire.class, "200", null, "placa"),
                 new Operation("POST", Routes.V1_SIMULATION_FINANCING, V1CreateFinancingSimulationRequestWire.class, SimulationListResponseWire.class, "201", null),
+                new Operation("POST", Routes.V1_SIMULATION_FINANCING_WITHOUT_CPF, CreateFinancingWithoutCpfRequestWire.class, FinancingWithoutCpfResponseWire.class, "200", null),
+                new Operation("POST", Routes.V1_SIMULATION_REFINANCING_WITHOUT_CPF, CreateRefinancingWithoutCpfRequestWire.class, RefinancingWithoutCpfResponseWire.class, "200", null),
                 new Operation("POST", Routes.V1_SIMULATION_REFINANCING, V1CreateRefinancingSimulationRequestWire.class, SimulationListResponseWire.class, "201", null),
                 new Operation("GET", Routes.V1_SIMULATIONS, null, PagedResultWire.class, "200", SimulationWire.class, PAGING_QUERY),
                 new Operation("GET", Routes.V1_SIMULATION_BY_ID, null, SimulationWire.class, "200", null),

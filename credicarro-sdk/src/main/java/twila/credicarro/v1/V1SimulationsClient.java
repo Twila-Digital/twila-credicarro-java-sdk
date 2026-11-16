@@ -2,7 +2,9 @@ package twila.credicarro.v1;
 
 import java.util.List;
 import twila.credicarro.simulations.model.FinancingRangeOption;
+import twila.credicarro.simulations.model.FinancingWithoutCpfOption;
 import twila.credicarro.simulations.model.RefinancingRangeOption;
+import twila.credicarro.simulations.model.RefinancingWithoutCpfOption;
 import twila.credicarro.simulations.model.SimulationOption;
 
 /**
@@ -24,6 +26,21 @@ public interface V1SimulationsClient {
      * {@code POST v1/proposal/simulation/financing}.
      */
     List<SimulationOption> createFinancing(V1CreateFinancingSimulationRequest request);
+
+    /**
+     * {@code POST v1/proposal/simulation/financing/without-cpf}. Calcula as parcelas só com placa, valor do veículo e UF,
+     * sem CPF e sem cadastro de cliente. Nada é gravado: as opções não têm {@code simulationId} e não servem para criar
+     * proposta. Não usa {@code Idempotency-Key} e é repetida automaticamente em falhas transitórias.
+     */
+    List<FinancingWithoutCpfOption> createFinancingWithoutCpf(CreateFinancingWithoutCpfRequest request);
+
+    /**
+     * {@code POST v1/proposal/simulation/refinancing/without-cpf}. Calcula as parcelas do refinanciamento só com placa,
+     * valor solicitado e UF, sem CPF e sem cadastro de cliente. Nada é gravado: as opções não têm {@code simulationId}
+     * e não servem para criar proposta. Só voltam os prazos em cuja faixa o valor cabe. Não usa {@code Idempotency-Key}
+     * e é repetida automaticamente em falhas transitórias.
+     */
+    List<RefinancingWithoutCpfOption> createRefinancingWithoutCpf(CreateRefinancingWithoutCpfRequest request);
 
     /**
      * {@code POST v1/proposal/simulation/refinancing}.

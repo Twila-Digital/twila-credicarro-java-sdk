@@ -4,13 +4,19 @@ import java.util.ArrayList;
 import java.util.List;
 import twila.credicarro.internal.generated.simulation.CetWire;
 import twila.credicarro.internal.generated.simulation.CreateFinancingSimulationRequestWire;
+import twila.credicarro.internal.generated.simulation.CreateFinancingWithoutCpfRequestWire;
 import twila.credicarro.internal.generated.simulation.CreateRefinancingSimulationRequestWire;
+import twila.credicarro.internal.generated.simulation.CreateRefinancingWithoutCpfRequestWire;
 import twila.credicarro.internal.generated.simulation.FinancingRangeOptionWire;
 import twila.credicarro.internal.generated.simulation.FinancingRangeResponseWire;
+import twila.credicarro.internal.generated.simulation.FinancingWithoutCpfOptionWire;
+import twila.credicarro.internal.generated.simulation.FinancingWithoutCpfResponseWire;
 import twila.credicarro.internal.generated.simulation.InterestWire;
 import twila.credicarro.internal.generated.simulation.IofWire;
 import twila.credicarro.internal.generated.simulation.RefinancingRangeOptionWire;
 import twila.credicarro.internal.generated.simulation.RefinancingRangeResponseWire;
+import twila.credicarro.internal.generated.simulation.RefinancingWithoutCpfOptionWire;
+import twila.credicarro.internal.generated.simulation.RefinancingWithoutCpfResponseWire;
 import twila.credicarro.internal.generated.simulation.SimulationListResponseWire;
 import twila.credicarro.internal.generated.simulation.SimulationOptionWire;
 import twila.credicarro.internal.generated.simulation.SimulationWire;
@@ -22,7 +28,9 @@ import twila.credicarro.serialization.EnumMapping;
 import twila.credicarro.simulations.model.CreateFinancingSimulationRequest;
 import twila.credicarro.simulations.model.CreateRefinancingSimulationRequest;
 import twila.credicarro.simulations.model.FinancingRangeOption;
+import twila.credicarro.simulations.model.FinancingWithoutCpfOption;
 import twila.credicarro.simulations.model.RefinancingRangeOption;
+import twila.credicarro.simulations.model.RefinancingWithoutCpfOption;
 import twila.credicarro.simulations.model.Simulation;
 import twila.credicarro.simulations.model.SimulationIof;
 import twila.credicarro.simulations.model.SimulationOption;
@@ -30,6 +38,8 @@ import twila.credicarro.simulations.model.SimulationRate;
 import twila.credicarro.simulations.model.SimulationTransaction;
 import twila.credicarro.simulations.model.SimulationType;
 import twila.credicarro.simulations.model.SimulationVehicle;
+import twila.credicarro.v1.CreateFinancingWithoutCpfRequest;
+import twila.credicarro.v1.CreateRefinancingWithoutCpfRequest;
 import twila.credicarro.v1.V1CreateFinancingSimulationRequest;
 import twila.credicarro.v1.V1CreateRefinancingSimulationRequest;
 
@@ -67,6 +77,23 @@ public final class SimulationMapper {
         wire.valorEntrada = request.getDownPayment();
         wire.uf = request.getState();
         wire.isVeiculoZeroKm = request.isZeroKm();
+        return wire;
+    }
+
+    public static CreateFinancingWithoutCpfRequestWire toWire(CreateFinancingWithoutCpfRequest request) {
+        CreateFinancingWithoutCpfRequestWire wire = new CreateFinancingWithoutCpfRequestWire();
+        wire.placa = request.getLicensePlate();
+        wire.valorVeiculo = request.getVehicleAmount();
+        wire.valorEntrada = request.getDownPayment();
+        wire.uf = request.getState();
+        return wire;
+    }
+
+    public static CreateRefinancingWithoutCpfRequestWire toWire(CreateRefinancingWithoutCpfRequest request) {
+        CreateRefinancingWithoutCpfRequestWire wire = new CreateRefinancingWithoutCpfRequestWire();
+        wire.placa = request.getLicensePlate();
+        wire.valorSolicitado = request.getRequestedAmount();
+        wire.uf = request.getState();
         return wire;
     }
 
@@ -109,6 +136,69 @@ public final class SimulationMapper {
         }
 
         return options;
+    }
+
+    public static List<FinancingWithoutCpfOption> toPublic(FinancingWithoutCpfResponseWire wire) {
+        List<FinancingWithoutCpfOption> options = new ArrayList<>();
+
+        if (wire != null && wire.cotacoes != null) {
+            for (FinancingWithoutCpfOptionWire option : wire.cotacoes)
+                options.add(toPublic(option));
+        }
+
+        return options;
+    }
+
+    public static FinancingWithoutCpfOption toPublic(FinancingWithoutCpfOptionWire wire) {
+        return new FinancingWithoutCpfOption(
+                wire.valorSolicitado,
+                wire.prazo,
+                wire.valorParcela,
+                wire.valorTac,
+                wire.valorBoleto,
+                wire.valorSeguro,
+                wire.valorIof,
+                wire.percentualIof,
+                wire.valorCreditoTotal,
+                wire.valorDividaTotal,
+                wire.percentualCetMensal,
+                wire.percentualCetAnual,
+                wire.percentualJurosMensal,
+                wire.percentualJurosAnual,
+                wire.valorRetencaoDiariaAproximado,
+                wire.valorEntradaMinima);
+    }
+
+    public static List<RefinancingWithoutCpfOption> toPublic(RefinancingWithoutCpfResponseWire wire) {
+        List<RefinancingWithoutCpfOption> options = new ArrayList<>();
+
+        if (wire != null && wire.cotacoes != null) {
+            for (RefinancingWithoutCpfOptionWire option : wire.cotacoes)
+                options.add(toPublic(option));
+        }
+
+        return options;
+    }
+
+    public static RefinancingWithoutCpfOption toPublic(RefinancingWithoutCpfOptionWire wire) {
+        return new RefinancingWithoutCpfOption(
+                wire.valorSolicitado,
+                wire.prazo,
+                wire.valorParcela,
+                wire.valorTac,
+                wire.valorBoleto,
+                wire.valorSeguro,
+                wire.valorIof,
+                wire.percentualIof,
+                wire.valorCreditoTotal,
+                wire.valorDividaTotal,
+                wire.percentualCetMensal,
+                wire.percentualCetAnual,
+                wire.percentualJurosMensal,
+                wire.percentualJurosAnual,
+                wire.valorRetencaoDiariaAproximado,
+                wire.valorMinimoRefinanciavel,
+                wire.valorMaximoRefinanciavel);
     }
 
     public static SimulationOption toPublic(SimulationOptionWire wire) {

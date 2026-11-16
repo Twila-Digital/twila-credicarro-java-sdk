@@ -3,7 +3,9 @@ package twila.credicarro.v1;
 import java.util.List;
 import java.util.Objects;
 import twila.credicarro.internal.generated.simulation.FinancingRangeResponseWire;
+import twila.credicarro.internal.generated.simulation.FinancingWithoutCpfResponseWire;
 import twila.credicarro.internal.generated.simulation.RefinancingRangeResponseWire;
+import twila.credicarro.internal.generated.simulation.RefinancingWithoutCpfResponseWire;
 import twila.credicarro.internal.generated.simulation.SimulationListResponseWire;
 import twila.credicarro.internal.http.ApiRequestExecutor;
 import twila.credicarro.internal.http.ApiResponse;
@@ -12,7 +14,9 @@ import twila.credicarro.internal.http.QueryStringBuilder;
 import twila.credicarro.internal.http.Routes;
 import twila.credicarro.internal.mapping.SimulationMapper;
 import twila.credicarro.simulations.model.FinancingRangeOption;
+import twila.credicarro.simulations.model.FinancingWithoutCpfOption;
 import twila.credicarro.simulations.model.RefinancingRangeOption;
+import twila.credicarro.simulations.model.RefinancingWithoutCpfOption;
 import twila.credicarro.simulations.model.SimulationOption;
 
 public final class V1SimulationsClientImpl implements V1SimulationsClient {
@@ -47,6 +51,26 @@ public final class V1SimulationsClientImpl implements V1SimulationsClient {
         ApiRequestExecutor.ensureSuccess(response);
 
         return SimulationMapper.toPublic(JsonSupport.read(response, SimulationListResponseWire.class));
+    }
+
+    @Override
+    public List<FinancingWithoutCpfOption> createFinancingWithoutCpf(CreateFinancingWithoutCpfRequest request) {
+        Objects.requireNonNull(request, "request é obrigatório.");
+
+        ApiResponse response = executor.post(Routes.V1_SIMULATION_FINANCING_WITHOUT_CPF, JsonSupport.write(SimulationMapper.toWire(request)));
+        ApiRequestExecutor.ensureSuccess(response);
+
+        return SimulationMapper.toPublic(JsonSupport.read(response, FinancingWithoutCpfResponseWire.class));
+    }
+
+    @Override
+    public List<RefinancingWithoutCpfOption> createRefinancingWithoutCpf(CreateRefinancingWithoutCpfRequest request) {
+        Objects.requireNonNull(request, "request é obrigatório.");
+
+        ApiResponse response = executor.post(Routes.V1_SIMULATION_REFINANCING_WITHOUT_CPF, JsonSupport.write(SimulationMapper.toWire(request)));
+        ApiRequestExecutor.ensureSuccess(response);
+
+        return SimulationMapper.toPublic(JsonSupport.read(response, RefinancingWithoutCpfResponseWire.class));
     }
 
     @Override
