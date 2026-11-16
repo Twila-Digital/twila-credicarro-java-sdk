@@ -19,10 +19,15 @@ public class CreateFinancingSimulationRequest {
     boolean isZeroKm;
     String storeCnpj;
     /**
+     * Retorno de comissão ({@code retornoComissao}), opcional. Quando informado, precisa estar na faixa
+     * {@code Financing} da loja (veja {@code SimulationsClient.getCommissionReturns}); {@code null} não é enviado.
+     */
+    Integer commissionReturn;
+    /**
      * Dados pessoais, bancários e credenciais aparecem mascarados.
      */
     @Override
     public String toString() {
-        return Masking.describe("CreateFinancingSimulationRequest", "cpf", Masking.cpf(cpf), "licensePlate", Masking.mask(licensePlate), "vehicleAmount", vehicleAmount, "downPayment", downPayment, "state", state, "isZeroKm", isZeroKm, "storeCnpj", storeCnpj);
+        return Masking.describe("CreateFinancingSimulationRequest", "cpf", Masking.cpf(cpf), "licensePlate", Masking.mask(licensePlate), "vehicleAmount", vehicleAmount, "downPayment", downPayment, "state", state, "isZeroKm", isZeroKm, "storeCnpj", storeCnpj, "commissionReturn", commissionReturn);
     }
 }

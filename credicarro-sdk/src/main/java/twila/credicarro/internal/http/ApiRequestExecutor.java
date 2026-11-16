@@ -78,6 +78,24 @@ public final class ApiRequestExecutor {
         return send("POST", path, jsonBody, explicitIdempotencyKey, true, attemptTimeout, budget);
     }
 
+    /**
+     * Reenvio de webhook: {@code POST} sem corpo e sem {@code Idempotency-Key}, portanto nunca repetido. A tentativa
+     * espera pelo menos {@link #WEBHOOK_RESEND_MINIMUM_TIMEOUT}, porque a API aguarda a resposta da URL do integrador
+     * (até 15 s do lado da Credicarro).
+     */
+    public ApiResponse postWebhookResend(String path) {
+        Duration attemptTimeout = max(resilienceOptions.getAttemptTimeout(), WEBHOOK_RESEND_MINIMUM_TIMEOUT);
+        Duration budget = max(resilienceOptions.getTotalTimeout(), attemptTimeout);
+
+        return send("POST", path, null, null, false, attemptTimeout, budget);
+    }
+
+    private static final Duration WEBHOOK_RESEND_MINIMUM_TIMEOUT = Duration.ofSeconds(30);
+
+    private static Duration max(Duration first, Duration second) {
+        return first.compareTo(second) >= 0 ? first : second;
+    }
+
     public ApiResponse put(String path, byte[] jsonBody) {
         return send("PUT", path, jsonBody, null, false, resilienceOptions.getAttemptTimeout(), resilienceOptions.getTotalTimeout());
     }

@@ -39,6 +39,7 @@ import twila.credicarro.internal.generated.proposal.ProposalIdResponseWire;
 import twila.credicarro.internal.generated.proposal.ProposalV2Wire;
 import twila.credicarro.internal.generated.proposal.ProposalWire;
 import twila.credicarro.internal.generated.proposal.VehicleDetailRequestWire;
+import twila.credicarro.internal.generated.simulation.CommissionReturnsResponseWire;
 import twila.credicarro.internal.generated.simulation.CreateFinancingSimulationRequestWire;
 import twila.credicarro.internal.generated.simulation.CreateRefinancingSimulationRequestWire;
 import twila.credicarro.internal.generated.simulation.FinancingRangeResponseWire;
@@ -50,6 +51,8 @@ import twila.credicarro.internal.generated.simulation.V1CreateRefinancingSimulat
 import twila.credicarro.internal.generated.webhook.CreateWebhookRequestWire;
 import twila.credicarro.internal.generated.webhook.CreateWebhookResponseWire;
 import twila.credicarro.internal.generated.webhook.UpdateWebhookRequestWire;
+import twila.credicarro.internal.generated.webhook.WebhookDeliveryWire;
+import twila.credicarro.internal.generated.webhook.WebhookResendResponseWire;
 import twila.credicarro.internal.generated.webhook.WebhookWire;
 import twila.credicarro.internal.http.Routes;
 import twila.credicarro.internal.idempotency.IdempotencyClassifier;
@@ -58,6 +61,7 @@ import twila.credicarro.proposals.model.ProposalParticipant;
 import twila.credicarro.proposals.model.ProposalStatus;
 import twila.credicarro.proposals.model.ProposalType;
 import twila.credicarro.serialization.EnumMapping;
+import twila.credicarro.simulations.model.CommissionReturnTarget;
 import twila.credicarro.simulations.model.SimulationType;
 
 /**
@@ -123,6 +127,7 @@ class WireContractTests {
 
                 new Operation("GET", Routes.V2_RANGE_FINANCING, null, FinancingRangeResponseWire.class, "200", null, "placa", "cnpjLoja"),
                 new Operation("GET", Routes.V2_RANGE_REFINANCING, null, RefinancingRangeResponseWire.class, "200", null, "placa", "cnpjLoja"),
+                new Operation("GET", Routes.V2_COMMISSION_RETURNS, null, CommissionReturnsResponseWire.class, "200", null, "cnpjLoja"),
                 new Operation("POST", Routes.V2_SIMULATION_FINANCING, CreateFinancingSimulationRequestWire.class, SimulationListResponseWire.class, "201", null),
                 new Operation("POST", Routes.V2_SIMULATION_REFINANCING, CreateRefinancingSimulationRequestWire.class, SimulationListResponseWire.class, "201", null),
                 new Operation("POST", Routes.V2_PROPOSALS, CreateProposalRequestWire.class, ProposalIdResponseWire.class, "201", null),
@@ -134,7 +139,10 @@ class WireContractTests {
                 new Operation("POST", Routes.WEBHOOKS, CreateWebhookRequestWire.class, CreateWebhookResponseWire.class, "201", null),
                 new Operation("GET", Routes.WEBHOOKS, null, PagedResultWire.class, "200", WebhookWire.class, PAGING_QUERY),
                 new Operation("PUT", Routes.WEBHOOK_BY_ID, UpdateWebhookRequestWire.class, null, "204", null),
-                new Operation("DELETE", Routes.WEBHOOK_BY_ID, null, null, "204", null));
+                new Operation("DELETE", Routes.WEBHOOK_BY_ID, null, null, "204", null),
+                new Operation("GET", Routes.WEBHOOK_AUDIT, null, PagedResultWire.class, "200", WebhookDeliveryWire.class,
+                        "data_inicial", "data_final", "id_proposta", "id_simulacao", "numero_proposta", "status_http", "pagina_inicial", "limite"),
+                new Operation("POST", Routes.WEBHOOK_AUDIT_RESEND, null, WebhookResendResponseWire.class, "200", null));
     }
 
     @ParameterizedTest(name = "{0}")
@@ -189,6 +197,8 @@ class WireContractTests {
                 .path("content").path("application/json").path("schema"));
 
         assertThat(schema.isMissingNode()).as("%s: schema de resposta %s", operation, operation.successStatus).isFalse();
+        if ("array".equals(schema.path("type").asText()))
+            schema = OpenApiFixture.resolve(openApi, schema.path("items"));
         assertWireMatchesSchema(openApi, operation.response, operation.itemType, schema, operation + " (resposta)", false);
     }
 
@@ -270,6 +280,12 @@ class WireContractTests {
         assertEnumCovered(schemas.path("ProposalV2Response").path("properties").path("tipo"), ProposalType.class);
         assertEnumCovered(schemas.path("ProposalResponse").path("properties").path("tipo"), ProposalType.class);
         assertEnumCovered(schemas.path("SimulationResponse").path("properties").path("tipo"), SimulationType.class);
+
+        JsonNode commissionReturn = OpenApiFixture.resolve(openApi, openApi.path("paths").path("/v2/proposal/simulation/commission-returns")
+                .path("get").path("responses").path("200").path("content").path("application/json").path("schema")
+                .path("properties").path("retornos_comissao").path("items"));
+        assertEnumCovered(commissionReturn.path("properties").path("tipo"), SimulationType.class);
+        assertEnumCovered(commissionReturn.path("properties").path("alvo"), CommissionReturnTarget.class);
 
         JsonNode deposit = openApi.path("paths").path("/v2/proposal/{propostaId}/deposit-account").path("post").path("requestBody")
                 .path("content").path("application/json").path("schema").path("properties").path("tipoConta");

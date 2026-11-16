@@ -30,4 +30,7 @@ public final class CreateFinancingSimulationRequestWire {
 
     @JsonProperty("cnpjLoja")
     public String cnpjLoja;
+
+    @JsonProperty("retornoComissao")
+    public Integer retornoComissao;
 }

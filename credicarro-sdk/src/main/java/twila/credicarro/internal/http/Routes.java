@@ -26,6 +26,7 @@ public final class Routes {
 
     public static final String V2_RANGE_FINANCING = "v2/proposal/simulation/range/financing";
     public static final String V2_RANGE_REFINANCING = "v2/proposal/simulation/range/refinancing";
+    public static final String V2_COMMISSION_RETURNS = "v2/proposal/simulation/commission-returns";
     public static final String V2_SIMULATION_FINANCING = "v2/proposal/simulation/financing";
     public static final String V2_SIMULATION_REFINANCING = "v2/proposal/simulation/refinancing";
     public static final String V2_PROPOSALS = "v2/proposal";
@@ -36,6 +37,8 @@ public final class Routes {
 
     public static final String WEBHOOKS = "v1/webhook";
     public static final String WEBHOOK_BY_ID = "v1/webhook/%s";
+    public static final String WEBHOOK_AUDIT = "v1/webhook/audit";
+    public static final String WEBHOOK_AUDIT_RESEND = "v1/webhook/audit/%s/resend";
 
     private Routes() {
     }
