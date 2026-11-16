@@ -1,6 +1,5 @@
 package twila.credicarro.webhooks;
 
-import java.util.List;
 import java.util.UUID;
 import twila.credicarro.ListRequest;
 import twila.credicarro.PagedResult;
@@ -9,7 +8,6 @@ import twila.credicarro.webhooks.model.CreateWebhookResult;
 import twila.credicarro.webhooks.model.UpdateWebhookRequest;
 import twila.credicarro.webhooks.model.Webhook;
 import twila.credicarro.webhooks.model.WebhookDelivery;
-import twila.credicarro.webhooks.model.WebhookDeliveryChartPoint;
 import twila.credicarro.webhooks.model.WebhookDeliveryFilter;
 import twila.credicarro.webhooks.model.WebhookResendResult;
 
@@ -52,12 +50,6 @@ public interface WebhooksClient {
      * Todos os filtros são opcionais.
      */
     PagedResult<WebhookDelivery> listDeliveries(WebhookDeliveryFilter filter, ListRequest paging);
-
-    /**
-     * Sucessos e erros por intervalo, no horário de Brasília ({@code GET v1/webhook/audit/chart}). {@code initialDate}
-     * e {@code finalDate} são obrigatórios, e o período pode ter até 31 dias.
-     */
-    List<WebhookDeliveryChartPoint> getDeliveryChart(WebhookDeliveryFilter filter);
 
     /**
      * Reenvia para a sua URL o mesmo corpo de um envio do histórico ({@code POST v1/webhook/audit/:id/resend}). É uma

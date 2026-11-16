@@ -51,7 +51,6 @@ import twila.credicarro.internal.generated.simulation.V1CreateRefinancingSimulat
 import twila.credicarro.internal.generated.webhook.CreateWebhookRequestWire;
 import twila.credicarro.internal.generated.webhook.CreateWebhookResponseWire;
 import twila.credicarro.internal.generated.webhook.UpdateWebhookRequestWire;
-import twila.credicarro.internal.generated.webhook.WebhookDeliveryChartPointWire;
 import twila.credicarro.internal.generated.webhook.WebhookDeliveryWire;
 import twila.credicarro.internal.generated.webhook.WebhookResendResponseWire;
 import twila.credicarro.internal.generated.webhook.WebhookWire;
@@ -143,8 +142,6 @@ class WireContractTests {
                 new Operation("DELETE", Routes.WEBHOOK_BY_ID, null, null, "204", null),
                 new Operation("GET", Routes.WEBHOOK_AUDIT, null, PagedResultWire.class, "200", WebhookDeliveryWire.class,
                         "data_inicial", "data_final", "id_proposta", "id_simulacao", "numero_proposta", "status_http", "pagina_inicial", "limite"),
-                new Operation("GET", Routes.WEBHOOK_AUDIT_CHART, null, WebhookDeliveryChartPointWire.class, "200", null,
-                        "data_inicial", "data_final", "id_proposta", "id_simulacao", "numero_proposta", "status_http"),
                 new Operation("POST", Routes.WEBHOOK_AUDIT_RESEND, null, WebhookResendResponseWire.class, "200", null));
     }
 

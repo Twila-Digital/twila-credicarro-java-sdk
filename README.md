@@ -192,7 +192,7 @@ client.proposals().uploadDocument(propostaId, ProposalDocumentUpload.builder()
 | `client.customers()` | `upsert`, `create`, `upsertAddress`, `upsertProfessionalData` |
 | `client.simulations()` | `getFinancingRange`, `getRefinancingRange`, `getCommissionReturns`, `createFinancing`, `createRefinancing`, `get`, `list` |
 | `client.proposals()` | `create`, `get`, `list`, `sendVehicleDetails`, `sendDepositAccount`, `uploadDocument` |
-| `client.webhooks()` | `create`, `list`, `update`, `delete`, `listDeliveries`, `getDeliveryChart`, `resend` |
+| `client.webhooks()` | `create`, `list`, `update`, `delete`, `listDeliveries`, `resend` |
 | `client.v1().simulations()` | `getFinancingRange`, `getRefinancingRange`, `createFinancing`, `createRefinancing` (rotas v1, sem CNPJ da loja) |
 | `client.v1().proposals()` | `create`, `get` (rotas v1) |
 
@@ -304,7 +304,7 @@ CreateWebhookResult webhook = client.webhooks().create(CreateWebhookRequest.buil
 String segredo = webhook.getSigningSecret();
 ```
 
-Histórico, gráfico e reenvio:
+Histórico e reenvio:
 
 ```java
 WebhookDeliveryFilter semana = WebhookDeliveryFilter.builder()
@@ -315,9 +315,6 @@ WebhookDeliveryFilter semana = WebhookDeliveryFilter.builder()
 // Envios que falharam (filtros opcionais)
 PagedResult<WebhookDelivery> falhas = client.webhooks().listDeliveries(
         semana.toBuilder().statusCode(500).build(), ListRequest.defaults());
-
-// Sucessos e erros por intervalo (período obrigatório, até 31 dias; rótulos no horário de Brasília)
-List<WebhookDeliveryChartPoint> grafico = client.webhooks().getDeliveryChart(semana);
 
 // Reenvia o mesmo corpo para a sua URL depois de corrigir a falha
 WebhookResendResult resultado = client.webhooks().resend(falhas.getItems().get(0).getId());

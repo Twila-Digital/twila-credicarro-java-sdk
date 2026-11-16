@@ -30,7 +30,6 @@ import twila.credicarro.simulations.model.SimulationType;
 import twila.credicarro.support.ApiTestSupport;
 import twila.credicarro.support.Fixtures;
 import twila.credicarro.webhooks.model.WebhookDelivery;
-import twila.credicarro.webhooks.model.WebhookDeliveryChartPoint;
 import twila.credicarro.webhooks.model.WebhookDeliveryFilter;
 import twila.credicarro.webhooks.model.WebhookResendResult;
 import twila.credicarro.webhooks.model.WebhookType;
@@ -86,29 +85,6 @@ class WebhookDeliveriesWireMockTest extends ApiTestSupport {
         client.webhooks().listDeliveries();
 
         server.verify(getRequestedFor(urlEqualTo(path("v1/webhook/audit?pagina_inicial=1&limite=10"))));
-    }
-
-    @Test
-    void getDeliveryChartSendsThePeriodAndMapsThePoints() {
-        server.stubFor(get(urlPathEqualTo(path("v1/webhook/audit/chart"))).willReturn(jsonResponse(200,
-                "[{'rotulo':'04','sucessos':42,'erros':0},{'rotulo':'05','sucessos':38,'erros':3}]")));
-
-        List<WebhookDeliveryChartPoint> points = client.webhooks().getDeliveryChart(WebhookDeliveryFilter.builder()
-                .initialDate(OffsetDateTime.of(2026, 11, 4, 0, 0, 0, 0, ZoneOffset.UTC))
-                .finalDate(OffsetDateTime.of(2026, 11, 5, 23, 59, 59, 0, ZoneOffset.UTC))
-                .build());
-
-        server.verify(getRequestedFor(urlPathEqualTo(path("v1/webhook/audit/chart")))
-                .withQueryParam("data_inicial", equalTo("2026-11-04T00:00:00Z"))
-                .withQueryParam("data_final", equalTo("2026-11-05T23:59:59Z")));
-        assertThat(points).containsExactly(new WebhookDeliveryChartPoint("04", 42, 0), new WebhookDeliveryChartPoint("05", 38, 3));
-    }
-
-    @Test
-    void getDeliveryChartRequiresThePeriod() {
-        assertThatThrownBy(() -> client.webhooks().getDeliveryChart(WebhookDeliveryFilter.builder()
-                .initialDate(OffsetDateTime.now()).build()))
-                .isInstanceOf(NullPointerException.class);
     }
 
     @Test

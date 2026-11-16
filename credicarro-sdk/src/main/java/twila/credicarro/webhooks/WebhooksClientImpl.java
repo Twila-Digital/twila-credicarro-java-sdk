@@ -1,13 +1,10 @@
 package twila.credicarro.webhooks;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 import twila.credicarro.ListRequest;
 import twila.credicarro.PagedResult;
 import twila.credicarro.internal.generated.webhook.CreateWebhookResponseWire;
-import twila.credicarro.internal.generated.webhook.WebhookDeliveryChartPointWire;
 import twila.credicarro.internal.generated.webhook.WebhookDeliveryWire;
 import twila.credicarro.internal.generated.webhook.WebhookResendResponseWire;
 import twila.credicarro.internal.generated.webhook.WebhookWire;
@@ -22,7 +19,6 @@ import twila.credicarro.webhooks.model.CreateWebhookResult;
 import twila.credicarro.webhooks.model.UpdateWebhookRequest;
 import twila.credicarro.webhooks.model.Webhook;
 import twila.credicarro.webhooks.model.WebhookDelivery;
-import twila.credicarro.webhooks.model.WebhookDeliveryChartPoint;
 import twila.credicarro.webhooks.model.WebhookDeliveryFilter;
 import twila.credicarro.webhooks.model.WebhookResendResult;
 
@@ -83,20 +79,6 @@ public final class WebhooksClientImpl implements WebhooksClient {
         ApiResponse response = executor.get(path);
         ApiRequestExecutor.ensureSuccess(response);
         return JsonSupport.readPaged(response, WebhookDeliveryWire.class, WebhookMapper::toPublic);
-    }
-
-    @Override
-    public List<WebhookDeliveryChartPoint> getDeliveryChart(WebhookDeliveryFilter filter) {
-        Objects.requireNonNull(filter, "filter é obrigatório.");
-        Objects.requireNonNull(filter.getInitialDate(), "filter.initialDate é obrigatório.");
-        Objects.requireNonNull(filter.getFinalDate(), "filter.finalDate é obrigatório.");
-        ApiResponse response = executor.get(WebhookMapper.addFilter(new QueryStringBuilder(), filter).build(Routes.WEBHOOK_AUDIT_CHART));
-        ApiRequestExecutor.ensureSuccess(response);
-
-        List<WebhookDeliveryChartPoint> points = new ArrayList<>();
-        for (WebhookDeliveryChartPointWire point : JsonSupport.read(response, WebhookDeliveryChartPointWire[].class))
-            points.add(WebhookMapper.toPublic(point));
-        return points;
     }
 
     @Override

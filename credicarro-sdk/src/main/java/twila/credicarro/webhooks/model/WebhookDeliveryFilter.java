@@ -6,8 +6,7 @@ import lombok.Builder;
 import lombok.Value;
 
 /**
- * Filtros do histórico e do gráfico de envios. Campos {@code null} não são enviados. No gráfico,
- * {@code initialDate} e {@code finalDate} são obrigatórios e o período pode ter até 31 dias.
+ * Filtros do histórico de envios. Campos {@code null} não são enviados.
  */
 @Value
 @Builder(toBuilder = true)

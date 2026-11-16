@@ -38,7 +38,6 @@ public final class Routes {
     public static final String WEBHOOKS = "v1/webhook";
     public static final String WEBHOOK_BY_ID = "v1/webhook/%s";
     public static final String WEBHOOK_AUDIT = "v1/webhook/audit";
-    public static final String WEBHOOK_AUDIT_CHART = "v1/webhook/audit/chart";
     public static final String WEBHOOK_AUDIT_RESEND = "v1/webhook/audit/%s/resend";
 
     private Routes() {

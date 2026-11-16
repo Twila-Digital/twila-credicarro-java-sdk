@@ -5,7 +5,6 @@ import static java.time.format.DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 import twila.credicarro.internal.generated.webhook.CreateWebhookRequestWire;
 import twila.credicarro.internal.generated.webhook.ProposalWebhookEventWire;
 import twila.credicarro.internal.generated.webhook.UpdateWebhookRequestWire;
-import twila.credicarro.internal.generated.webhook.WebhookDeliveryChartPointWire;
 import twila.credicarro.internal.generated.webhook.WebhookDeliveryWire;
 import twila.credicarro.internal.generated.webhook.WebhookResendResponseWire;
 import twila.credicarro.internal.generated.webhook.WebhookWire;
@@ -19,7 +18,6 @@ import twila.credicarro.webhooks.model.UpdateWebhookRequest;
 import twila.credicarro.webhooks.model.Webhook;
 import twila.credicarro.webhooks.model.WebhookAuthenticationType;
 import twila.credicarro.webhooks.model.WebhookDelivery;
-import twila.credicarro.webhooks.model.WebhookDeliveryChartPoint;
 import twila.credicarro.webhooks.model.WebhookDeliveryFilter;
 import twila.credicarro.webhooks.model.WebhookResendResult;
 import twila.credicarro.webhooks.model.WebhookStatus;
@@ -52,10 +50,6 @@ public final class WebhookMapper {
                 wire.resposta != null ? wire.resposta : "",
                 wire.statusHttp,
                 wire.dataCriacao);
-    }
-
-    public static WebhookDeliveryChartPoint toPublic(WebhookDeliveryChartPointWire wire) {
-        return new WebhookDeliveryChartPoint(wire.rotulo != null ? wire.rotulo : "", wire.sucessos, wire.erros);
     }
 
     public static WebhookResendResult toPublic(WebhookResendResponseWire wire) {
