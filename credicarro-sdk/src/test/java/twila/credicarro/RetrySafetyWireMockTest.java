@@ -161,6 +161,34 @@ class RetrySafetyWireMockTest extends ApiTestSupport {
     }
 
     @Test
+    void financingWithoutCpfIsRetriedWithoutAnyIdempotencyKey() {
+        String url = path("v1/proposal/simulation/financing/without-cpf");
+        failOnceThenSucceed("without-cpf", post(urlEqualTo(url)), 503, post(urlEqualTo(url)), jsonResponse(200, "{'cotacoes':[]}"));
+
+        client.v1().simulations().createFinancingWithoutCpf(twila.credicarro.v1.CreateFinancingWithoutCpfRequest.builder()
+                .licensePlate("ABC1D23").vehicleAmount(new BigDecimal("45000")).state("SP").build());
+
+        List<LoggedRequest> sent = server.findAll(postRequestedFor(urlEqualTo(url)));
+        assertThat(sent).hasSize(2);
+        assertThat(sent.get(0).containsHeader("Idempotency-Key")).isFalse();
+        assertThat(sent.get(1).containsHeader("Idempotency-Key")).isFalse();
+    }
+
+    @Test
+    void refinancingWithoutCpfIsRetriedWithoutAnyIdempotencyKey() {
+        String url = path("v1/proposal/simulation/refinancing/without-cpf");
+        failOnceThenSucceed("refinancing-without-cpf", post(urlEqualTo(url)), 503, post(urlEqualTo(url)), jsonResponse(200, "{'cotacoes':[]}"));
+
+        client.v1().simulations().createRefinancingWithoutCpf(twila.credicarro.v1.CreateRefinancingWithoutCpfRequest.builder()
+                .licensePlate("ABC1D23").requestedAmount(new BigDecimal("20000")).state("SP").build());
+
+        List<LoggedRequest> sent = server.findAll(postRequestedFor(urlEqualTo(url)));
+        assertThat(sent).hasSize(2);
+        assertThat(sent.get(0).containsHeader("Idempotency-Key")).isFalse();
+        assertThat(sent.get(1).containsHeader("Idempotency-Key")).isFalse();
+    }
+
+    @Test
     void addressAndProfessionalDataAlsoGetAnAutomaticKey() {
         server.stubFor(post(urlEqualTo(path("v1/customer/address"))).willReturn(aResponse().withStatus(202)));
         server.stubFor(post(urlEqualTo(path("v1/customer/professional"))).willReturn(aResponse().withStatus(202)));

@@ -75,6 +75,10 @@ class PiiMaskingTest {
         assertThat(CreateProposalRequest.builder().cpf("12345678909").simulationId(UUID.randomUUID()).build().toString()).doesNotContain("12345678909");
         assertThat(CreateFinancingSimulationRequest.builder().cpf("12345678909").licensePlate("ABC1D23").build().toString())
                 .doesNotContain("12345678909").doesNotContain("ABC1D23");
+        assertThat(twila.credicarro.v1.CreateFinancingWithoutCpfRequest.builder().licensePlate("ABC1D23").state("SP").build().toString())
+                .doesNotContain("ABC1D23");
+        assertThat(twila.credicarro.v1.CreateRefinancingWithoutCpfRequest.builder().licensePlate("ABC1D23").state("SP").build().toString())
+                .doesNotContain("ABC1D23");
         assertThat(new ProposalSummary(null, 1L, null, null, null, "x", "123.456.789-01", "987.654.321-00", null).toString())
                 .doesNotContain("123.456.789-01").doesNotContain("987.654.321-00").contains("***.456.789-**");
         assertThat(new ProposalDetails(null, 1L, null, null, 0, "x", null, null, "motivo privado", "https://link/sessao-secreta", null, null, null).toString())

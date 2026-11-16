@@ -27,6 +27,24 @@ class IdempotencyClassifierTest {
     }
 
     @Test
+    void financingWithoutCpfNeverGetsAKeyAndIsRetrySafeLikeARead() {
+        String route = "v1/proposal/simulation/financing/without-cpf";
+
+        assertThat(IdempotencyClassifier.requiresAutomaticKey("POST", route)).isFalse();
+        assertThat(IdempotencyClassifier.acceptsIdempotencyKey("POST", route)).isFalse();
+        assertThat(IdempotencyClassifier.isRetrySafe("POST", route, false)).isTrue();
+    }
+
+    @Test
+    void refinancingWithoutCpfNeverGetsAKeyAndIsRetrySafeLikeARead() {
+        String route = "v1/proposal/simulation/refinancing/without-cpf";
+
+        assertThat(IdempotencyClassifier.requiresAutomaticKey("POST", route)).isFalse();
+        assertThat(IdempotencyClassifier.acceptsIdempotencyKey("POST", route)).isFalse();
+        assertThat(IdempotencyClassifier.isRetrySafe("POST", route, false)).isTrue();
+    }
+
+    @Test
     void unifiedNeverGetsAnAutomaticKeyAndIsOnlyRetrySafeWithAnExplicitOne() {
         assertThat(IdempotencyClassifier.requiresAutomaticKey("POST", "v1/customer/unified")).isFalse();
         assertThat(IdempotencyClassifier.acceptsIdempotencyKey("POST", "v1/customer/unified")).isTrue();
